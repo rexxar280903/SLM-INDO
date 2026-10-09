@@ -1,7 +1,7 @@
 # KONSEP PENELITIAN — SLM Efisien untuk Bahasa Indonesia
 
 > **Dokumen hidup.** Ini satu-satunya sumber konsep penelitian. Claude memperbaruinya setiap selesai diskusi.
-> Versi: **v1.4** · Terakhir diperbarui: **2026-10-09** · Fase: **Penyusunan konsep**
+> Versi: **v1.5** · Terakhir diperbarui: **2026-10-09** · Fase: **Penyusunan konsep**
 
 **Penanda status** (dipakai di seluruh dokumen):
 - ✅ **Disepakati**: sudah diputuskan Ken
@@ -129,6 +129,7 @@ Usulan Ken (S10 & S25 di GPU, S125 di TPU) secara teknis **bisa**, tetapi tidak 
 | D15 | 2026-10-09 | Pembagian hardware: semua training di TPU; GPU untuk cadangan + benchmark + replikasi kecil S25 (RQ3) | 🟡 usulan, menunggu Ken |
 | D16 | 2026-10-09 | Program TPU Research Cloud (TRC) sebagai opsi tambahan compute | 🟡 opsi |
 | D17 | 2026-10-09 | Metrik evaluasi & daftar pembanding sesuai §10A–§10B | 🟡 usulan |
+| D18 | 2026-10-09 | Rencana perbandingan hasil: G1 internal (klaim utama), G2 eksternal Indonesia (rujukan), G3 literatur — §10C | 🟡 usulan |
 
 ---
 
@@ -418,6 +419,114 @@ Catatan: benchmark zero-shot penalaran (HellaSwag dkk.) tidak dipakai sebagai bu
 
 ---
 
+## 10C. Rencana Perbandingan di Bagian Hasil 🟡 (D18)
+
+Ya, bagian hasil membandingkan model kita dengan model lain dalam **tiga kelompok**. Klaim utama paper hanya didasarkan pada kelompok 1, karena hanya kelompok itu yang adil (compute-matched).
+
+| Kelompok | Siapa dibandingkan | Adil (compute-matched)? | Dipakai untuk |
+|---|---|---|---|
+| **G1 · Internal** | Model kita vs baseline B0–B3 yang kita latih sendiri, di setiap skala S10–S125 | ✅ Ya: data, token, optimizer, hardware identik | **Klaim utama** (RQ1–RQ5) |
+| **G2 · Eksternal Indonesia** | S125 terbaik + B0-S125 vs IndoGPT, GPT-2 Indonesia (cahya), Goldfish `ind_latn` | ❌ Tidak: data, tokenizer & budget berbeda | Titik rujukan: "seberapa dekat model efisien kita dengan LM Indonesia yang ada" |
+| **G3 · Literatur** | Tren kita vs temuan 2507.06457, 2510.04800, Based, CLA | ❌ Beda bahasa & skala | Diskusi: apakah temuan literatur berlaku di Indonesia ≤125M |
+
+### Data model yang dibandingkan
+
+| Kode | Model | Kelompok | Arsitektur | Param total | Non-embedding | Vocab | Konteks maks | Data latih | KV-cache / 1.000 token (fp16)* |
+|---|---|---|---|---|---|---|---|---|---|
+| **OURS** | Hybrid terbaik kita (target: Gated DeltaNet 3:1 + GQA) | – | Hybrid A+B | ~97M | ~85M | 16k | 2048 (uji s.d. 8k) | ~2B token (±8–10 GB) | **~3,1 MB** + state tetap ~0,9 MB 🎯 |
+| B0 | Transformer gaya LLaMA (MHA) | G1 | Full attention | ~97M | ~85M | 16k | 2048 | sama dengan OURS | ~36,9 MB |
+| B1 | Transformer + GQA (4 KV head) | G1 | Full attention + B | ~95M | ~83M | 16k | 2048 | sama | ~12,3 MB |
+| B2 | Pure Gated DeltaNet | G1 | Linear penuh | ~97M | ~85M | 16k | 2048 | sama | 0 MB + state tetap ~1,2 MB |
+| B3 | Hybrid 3:1 (gaya Qwen3-Next, MHA) | G1 | Hybrid A | ~97M | ~85M | 16k | 2048 | sama | ~9,2 MB + state tetap ~0,9 MB |
+| E1 | **IndoGPT** (IndoNLG, 2021) | G2 | GPT-2 (768×12) | ~117M | ~85M | 40k | 1024 | Indo4B-Plus ±23,8 GB | ~36,9 MB |
+| E2 | **cahya/gpt2-small-indonesian-522M** | G2 | GPT-2 small | ~124M | ~85M | 52k | 1024 🔍 | Wikipedia ID 522 MB | ~36,9 MB |
+| E3 | **Goldfish `ind_latn` 1000mb** | G2 | GPT-2-style 🔍 | ~125M | 🔍 | 🔍 | 🔍 | ≤1 GB | ~36,9 MB 🔍 |
+
+\* KV-cache dihitung analitik: 2 (K,V) × layer attention × 768 × 2 byte × 1.000 token. Konfigurasi 768×12: MHA = 12 layer attention; hybrid 3:1 = 3 layer; GQA 4/12 head = ⅓. "State tetap" = memori rekuren Gated DeltaNet yang **tidak** tumbuh dengan panjang teks. Baris OURS adalah **target/hipotesis**, bukan hasil. 🔍 = perlu dicek di model card/paper.
+
+### Metrik pembanding per kelompok
+
+| Metrik | G1 Internal | G2 Eksternal | Satuan | Lebih baik |
+|---|---|---|---|---|
+| bpb FLORES-200 `ind_Latn` devtest | ✅ | ✅ (metrik utama G2) | bit/byte | ↓ |
+| bpb held-out web (FineWeb-2/CulturaX) | ✅ | ✅ | bit/byte | ↓ |
+| bpb Wikipedia ID | ✅ | ⚠️ kecuali E2 (dilatih di Wikipedia) | bit/byte | ↓ |
+| Akurasi MQAR | ✅ | – (tugas sintetis, dilatih sendiri) | % | ↑ |
+| Akurasi passkey/needle 1k–8k | ✅ | ✅ (s.d. 1k untuk E1–E3) | % | ↑ |
+| SmSA macro-F1 (fine-tune singkat, anggaran sama) | ✅ | ✅ | % | ↑ |
+| Compute untuk mencapai bpb target | ✅ | – | FLOPs / TPU-jam | ↓ |
+| KV-cache per 1.000 token & memori puncak inferensi | ✅ | ✅ | MB | ↓ |
+| Latensi decode CPU laptop 5500U (batch 1) | ✅ | ✅ | ms/token | ↓ |
+| Throughput inferensi CPU & T4 | ✅ | ✅ | token/detik | ↑ |
+| Parameter total & non-embedding | ✅ | ✅ | juta | ↓ (pada kualitas setara) |
+
+### Grafik data pembanding (dari spesifikasi, bukan hasil eksperimen)
+
+Grafik di bawah memakai Mermaid. Tampil otomatis di GitHub; di VS Code pasang ekstensi *Markdown Preview Mermaid Support*.
+
+**KV-cache per 1.000 token (MB, fp16, analitik)**. OURS = target.
+
+```mermaid
+xychart-beta
+    title "KV-cache per 1.000 token (MB)"
+    x-axis ["B0 MHA", "E1 IndoGPT", "E2 GPT2-Indo", "B1 GQA", "B3 Hybrid 3:1", "OURS (target)", "B2 Pure GDN"]
+    y-axis "MB" 0 --> 40
+    bar [36.9, 36.9, 36.9, 12.3, 9.2, 3.1, 0]
+```
+
+**Parameter total (juta)**. Selisih model kita vs pembanding hampir seluruhnya berasal dari vocab yang lebih kecil; non-embedding semuanya ±85M.
+
+```mermaid
+xychart-beta
+    title "Parameter total (juta)"
+    x-axis ["OURS / B0 (vocab 16k)", "E1 IndoGPT (40k)", "E2 GPT2-Indo (52k)", "E3 Goldfish"]
+    y-axis "Juta parameter" 0 --> 140
+    bar [97, 117, 124, 125]
+```
+
+**Ukuran data latih (GB teks)**. Menunjukkan mengapa G2 bukan perbandingan compute-matched.
+
+```mermaid
+xychart-beta
+    title "Data latih (GB teks)"
+    x-axis ["E1 IndoGPT", "OURS (rencana)", "E3 Goldfish", "E2 GPT2-Indo"]
+    y-axis "GB" 0 --> 25
+    bar [23.8, 9, 1, 0.52]
+```
+
+### Tabel & grafik hasil yang akan diisi (template)
+
+**Tabel R1: Kualitas (S125 + G2)**
+
+| Model | bpb FLORES ↓ | bpb web ↓ | bpb Wiki ↓ | SmSA F1 ↑ | Passkey 1k ↑ |
+|---|---|---|---|---|---|
+| OURS | – | – | – | – | – |
+| B0 | – | – | – | – | – |
+| B1 | – | – | – | – | – |
+| B2 | – | – | – | – | – |
+| B3 | – | – | – | – | – |
+| E1 IndoGPT | – | – | – | – | – |
+| E2 GPT2-Indo | – | – | – | – | – |
+| E3 Goldfish | – | – | – | – | – |
+
+**Tabel R2: Efisiensi (S125 + G2)**
+
+| Model | KV/1k token (MB) ↓ | Memori puncak inferensi 8k (MB) ↓ | Latensi CPU (ms/token) ↓ | Throughput T4 (tok/s) ↑ | TPU-jam ke bpb target ↓ |
+|---|---|---|---|---|---|
+| OURS | – | – | – | – | – |
+| B0 | – | – | – | – | – |
+| … | – | – | – | – | – |
+
+**Grafik hasil yang direncanakan** (dibuat dari data eksperimen nanti, disimpan di `figures/`):
+1. **bpb vs FLOPs**, per arsitektur, di S10/S25/S50/S125 → efisiensi compute training (RQ1, RQ4)
+2. **Frontier Pareto: bpb vs KV-cache** → trade-off kualitas–memori (RQ1, RQ2)
+3. **Latensi CPU vs panjang konteks** (512 → 8k) → efisiensi inferensi edge (RQ3)
+4. **Akurasi MQAR vs jumlah pasangan key-value** → kemampuan recall
+5. **bpb vs skala model** (10M → 125M), per arsitektur → tren skala
+6. **Peringkat arsitektur di TPU vs T4 vs CPU** → RQ3
+
+---
+
 ## 11. Risiko & Mitigasi
 
 | Risiko | Dampak | Mitigasi |
@@ -485,6 +594,7 @@ Format: tanggal — topik — hasil — keputusan — langkah berikutnya
 - **2026-10-09 · Diskusi #13**: Dibuat folder `papers/` (wajib/penting/pendukung) dengan `DAFTAR-BACA.md` (19 paper, prioritas & fokus baca) dan skrip `unduh_paper.ps1`.
 - **2026-10-09 · Diskusi #14**: Ditambahkan 9 paper model/benchmark Indonesia (IndoNLG, Goldfish, IndoNLU, IndoLEM, Cendol, Sailor, SEA-LION, IndoMMLU, NusaCrowd) ke `papers/DAFTAR-BACA.md` (folder `papers/indonesia/`). PDF W2, W3, I1 sudah diunduh; sisanya lewat `unduh_paper.ps1`.
 - **2026-10-09 · Diskusi #15**: Klarifikasi istilah: "pretraining" di §9 = proses melatih model kita dari nol, bukan memakai model jadi. Ditambahkan ke glosarium; tokenizer dilatih di CPU Kaggle/TPU-VM, bukan laptop.
+- **2026-10-09 · Diskusi #16**: Ditambahkan §10C rencana perbandingan hasil: 3 kelompok (G1 internal compute-matched, G2 IndoGPT/GPT-2 Indo/Goldfish, G3 literatur), tabel data 8 model, metrik per kelompok, 3 grafik Mermaid (KV-cache, parameter, data latih), template tabel hasil R1–R2 & daftar 6 grafik hasil.
 
 ---
 
