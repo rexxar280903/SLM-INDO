@@ -1,7 +1,7 @@
 # KONSEP PENELITIAN — SLM Efisien untuk Bahasa Indonesia
 
 > **Dokumen hidup.** Ini satu-satunya sumber konsep penelitian. Claude memperbaruinya setiap selesai diskusi.
-> Versi: **v1.6** · Terakhir diperbarui: **2026-10-09** · Fase: **Penyusunan konsep**
+> Versi: **v2.0** · Terakhir diperbarui: **2026-10-09** · Fase: **Konsep final, siap mulai minggu 1**
 
 **Penanda status** (dipakai di seluruh dokumen):
 - ✅ **Disepakati**: sudah diputuskan Ken
@@ -96,7 +96,7 @@ Model kecil memakai chip TPU kurang efisien, sehingga utilisasi realistis rendah
 
 | Hardware | Tugas | Alasan |
 |---|---|---|
-| **TPU v5e-8** | **Semua training** S10, S25, S50, S125 (+ opsional 350M) | Satu hardware, satu presisi (bf16), satu kode → perbandingan antar skala adil; S10/S25 di TPU hanya butuh menit |
+| **TPU v5e-8** | **Semua training** S10, S25, S50, S125 | Satu hardware, satu presisi (bf16), satu kode → perbandingan antar skala adil; S10/S25 di TPU hanya butuh menit |
 | **GPU T4×2** | (1) Cadangan bila TPU antre/gagal; (2) benchmark kecepatan training & inferensi di GPU; (3) **replikasi kecil**: baseline + konfigurasi terbaik di S25 dilatih ulang di GPU untuk menguji apakah peringkat sama (RQ3) | Kuota GPU dipakai bersama proyek lain; T4 tanpa bf16 |
 | **Laptop 5500U** | Menulis kode; uji & benchmark inferensi CPU (latensi, throughput, memori) | Mewakili perangkat "edge" yang realistis |
 
@@ -128,12 +128,12 @@ Usulan Ken (S10 & S25 di GPU, S125 di TPU) secara teknis **bisa**, tetapi tidak 
 | D14 | 2026-10-09 | Laptop dipakai untuk menulis kode & **pengujian/benchmark inferensi**, bukan training | ✅ |
 | D15 | 2026-10-09 | Pembagian hardware: semua training di TPU; GPU untuk cadangan + benchmark + replikasi kecil S25 (RQ3) | ✅ (disetujui 2026-10-09) |
 | D16 | 2026-10-09 | Program TPU Research Cloud (TRC) sebagai opsi tambahan compute | 🟡 opsi |
-| D17 | 2026-10-09 | Metrik evaluasi & daftar pembanding sesuai §10A–§10B | 🟡 usulan |
-| D18 | 2026-10-09 | Rencana perbandingan hasil: G1 internal (klaim utama), G2 eksternal Indonesia (rujukan), G3 literatur — §10C | 🟡 usulan |
+| D17 | 2026-10-09 | Metrik evaluasi & daftar pembanding sesuai §10A–§10B | ✅ (dengan prioritas D22) |
+| D18 | 2026-10-09 | Rencana perbandingan hasil: G1 internal (klaim utama), G2 eksternal Indonesia (rujukan), G3 literatur — §10C | ✅ |
 | D19 | 2026-10-09 | Target publikasi: **jurnal Scopus & SINTA** (venue lain diperbolehkan); preprint arXiv lebih dulu bila kebijakan jurnal mengizinkan | ✅ |
-| D20 | 2026-10-09 | Vocab: **16k sebagai default** untuk semua skala + ablation vocab kecil (8k/16k/32k) di S25 untuk RQ5 | 🟡 usulan |
-| D21 | 2026-10-09 | Jangkar ±350M: **opsional (stretch goal)**, hanya B0 + OURS, dijalankan bila S125 selesai ≤ minggu 8 dan sisa kuota ≥35 TPU-jam | 🟡 usulan |
-| D22 | 2026-10-09 | Metrik dibagi **inti** (wajib) dan **pelengkap** (dikerjakan bila waktu cukup), lihat §10A | 🟡 usulan |
+| D20 | 2026-10-09 | Vocab: **16k sebagai default** untuk semua skala + ablation vocab kecil (8k/16k/32k) di S25 untuk RQ5 | ✅ |
+| D21 | 2026-10-09 | Jangkar ±350M | ❌ **tidak dipakai** (keputusan Ken). Skala terbesar tetap kelas 125M |
+| D22 | 2026-10-09 | Metrik dibagi **inti** (wajib) dan **pelengkap** (dikerjakan bila waktu cukup), lihat §10A | ✅ |
 
 ---
 
@@ -368,7 +368,6 @@ Ketat jika hanya 1× T4. T4×2 + DDP untuk S125 sangat dianjurkan.
 | N2 di S25 | ~10 | ~1–2 |
 | S125: baseline + 2–3 terbaik × 3 seed | 9–12 | ~9–16 |
 | S50 (standar): baseline + 2–3 terbaik × 3 seed | 9–12 | ~3–5 |
-| Jangkar ±350M: baseline + terbaik (opsional) | 2 | ~16–34 |
 | Cadangan / rerun | – | ~10 |
 | **Total** | | **~46–81 TPU-jam ≈ 3–4 minggu kuota** |
 
@@ -377,7 +376,7 @@ Tersedia ±160–200 TPU-jam selama 8–10 minggu, jadi margin besar. Kuota GPU 
 **Jika TPU v5e-8 dipakai (D10)** 🟡 alokasi di atas menyusut drastis (S125 ±1 jam/run), sehingga budget bisa dipakai untuk:
 - 3 seed di S125 (menghapus kekurangan "1 seed");
 - titik 50M menjadi standar (D12);
-- **opsional jangkar ±350M** (±8–17 jam TPU, butuh 1–2 sesi) yang bertumpang-tindih dengan skala terkecil studi 2507.06457;
+- ~~jangkar ±350M~~ (dibatalkan, D21 ❌);
 - RQ3 diperluas: peringkat efisiensi di **TPU vs GPU vs CPU**.
 
 ---
@@ -570,10 +569,9 @@ Catatan: dalam 3 bulan target realistis adalah preprint + submit jurnal, karena 
 ---
 
 ## 13. Pertanyaan Terbuka ❓
-1. Setuju usulan D20 (vocab 16k + ablation 8k/16k/32k di S25)?
-2. Setuju usulan D21 (350M sebagai stretch goal bersyarat)?
-3. Setuju usulan D22 (metrik inti vs pelengkap)?
-4. Daftar calon jurnal Scopus/SINTA: perlu diverifikasi indeks & scope-nya sebelum menulis (minggu 9–10).
+Semua pertanyaan konsep sudah terjawab (2026-10-09). Sisa tugas verifikasi:
+1. Cek indeks & scope calon jurnal Scopus/SINTA (minggu 9–10).
+2. Baca paper W1 (Training-time Selection) untuk memastikan novelty N2 (minggu 1).
 
 ---
 
@@ -604,6 +602,7 @@ Format: tanggal — topik — hasil — keputusan — langkah berikutnya
 - **2026-10-09 · Diskusi #15**: Klarifikasi istilah: "pretraining" di §9 = proses melatih model kita dari nol, bukan memakai model jadi. Ditambahkan ke glosarium; tokenizer dilatih di CPU Kaggle/TPU-VM, bukan laptop.
 - **2026-10-09 · Diskusi #16**: Ditambahkan §10C rencana perbandingan hasil: 3 kelompok (G1 internal compute-matched, G2 IndoGPT/GPT-2 Indo/Goldfish, G3 literatur), tabel data 8 model, metrik per kelompok, 3 grafik Mermaid (KV-cache, parameter, data latih), template tabel hasil R1–R2 & daftar 6 grafik hasil.
 - **2026-10-09 · Diskusi #17**: Ken menyetujui D15 (semua training di TPU) dan target jurnal Scopus & SINTA (D19). Rekomendasi: vocab 16k + ablation di S25 (D20), 350M sebagai stretch goal bersyarat (D21), metrik inti vs pelengkap + cek kontaminasi (D22).
+- **2026-10-09 · Diskusi #18**: Ken menolak jangkar 350M (D21 ❌) dan menyetujui sisanya: vocab 16k + ablation di S25 (D20 ✅), metrik inti vs pelengkap (D22 ✅), metrik/pembanding §10A–§10C (D17, D18 ✅). **Konsep dinyatakan final (v2.0)**. Berikutnya: minggu 1.
 
 ---
 

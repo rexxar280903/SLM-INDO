@@ -23,7 +23,7 @@ Penelitian **mandiri** untuk mengembangkan **arsitektur terbaru untuk language m
 - Riset mandiri sebelumnya memakai repo GitHub pribadi (`rexxar280903/...`) dan notebook/Kaggle; kemungkinan sumber daya komputasi terbatas (asumsikan GPU tunggal/Kaggle/Colab sampai dikonfirmasi).
 
 ## 4. Status Saat Ini
-- **Fase:** Inisiasi — diskusi konsep penelitian (belum ada kode, data, atau eksperimen).
+- **Fase:** Konsep **final** (KONSEP.md v2.0, 2026-10-09). Berikutnya minggu 1: belajar dasar JAX, uji kelayakan TPU (S10 end-to-end), siapkan data & tokenizer 16k, baca paper W1.
 - **Arah yang ditetapkan Ken:** LM baru yang menekankan **efisiensi**, dengan **biaya sangat terbatas** (riset mandiri).
 - **Konsep aktif:** `KONSEP.md` (dokumen hidup, v1.1) — sumber utama untuk keputusan (§3), literatur & pembanding (§4), RQ, novelty, arsitektur, metrik (§10A), pembanding (§10B), risiko, timeline, log diskusi.
 - **Prioritas efisiensi:** compute training > memori > parameter.
@@ -33,6 +33,7 @@ Penelitian **mandiri** untuk mengembangkan **arsitektur terbaru untuk language m
 - **Framework ✅:** JAX (+ Flax/Optax). Ken baru belajar JAX → jelaskan kode JAX langkah demi langkah.
 - **Novelty ✅:** N1 (studi empiris compute-matched) + N2 (*linear-first warm-start*).
 - **Target output:** jurnal + arXiv + portofolio, rentang 2–3 bulan (mulai Okt 2026).
+- **Vocab ✅:** 16k + ablation 8k/16k/32k di S25. **Tanpa** jangkar 350M.
 - **Skala model ✅:** tangga 10M / 25M / 50M / kelas 125M (S10/S25/S50/S125). S125 = 768×12, backbone GPT-2 small, ±97M total dengan vocab 16k (KONSEP.md D12).
 - **Baseline (draf):** Transformer gaya LLaMA, pure Gated DeltaNet, referensi Goldfish ind_latn.
 
@@ -75,6 +76,7 @@ Buat folder hanya saat dibutuhkan.
 ## 9. Log Perkembangan
 Format: `YYYY-MM-DD — ringkasan | hasil/angka | keputusan | langkah berikutnya`
 
+- **2026-10-09** — Konsep final (KONSEP.md v2.0): semua keputusan D1–D22 terjawab; 350M dibatalkan. | Berikutnya: minggu 1.
 - **2026-10-09** — Ken setujui N1+N2, TPU sebagai mesin utama, JAX, laptop untuk inferensi. KONSEP.md v1.1: penjelasan A/B, rasio, vocab; studi setara & pembanding Indonesia (IndoGPT dkk.); §10A metrik, §10B pembanding. Folder dijadikan repo git lokal. | Berikutnya: Ken jawab KONSEP.md §13; mulai minggu 1 (belajar JAX, uji kelayakan TPU, baca paper Training-time Selection).
 - **2026-10-08** — Skala final: 10M/25M/50M/kelas 125M (opsi A), KONSEP.md v1.0. | Berikutnya: putuskan framework (JAX?), N1+N2, jangkar 350M.
 - **2026-10-08** — Diskusi hardware: Kaggle menyediakan TPU v5e-8 → diusulkan sebagai mesin training utama (KONSEP.md D10/D11, v0.7). | Berikutnya: Ken putuskan TPU + framework (JAX vs PyTorch).
