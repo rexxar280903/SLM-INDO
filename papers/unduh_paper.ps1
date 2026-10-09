@@ -1,6 +1,15 @@
 # Unduh PDF daftar bacaan. Jalankan dari folder papers:
 #   powershell -ExecutionPolicy Bypass -File .\unduh_paper.ps1
 $papers = @(
+  @{d="indonesia"; f="I1_2104.08200_IndoNLG-IndoGPT.pdf"; u="https://arxiv.org/pdf/2104.08200"},
+  @{d="indonesia"; f="I2_2408.10441_Goldfish.pdf"; u="https://arxiv.org/pdf/2408.10441"},
+  @{d="indonesia"; f="I3_2009.05387_IndoNLU.pdf"; u="https://arxiv.org/pdf/2009.05387"},
+  @{d="indonesia"; f="I4_2011.00677_IndoLEM-IndoBERT.pdf"; u="https://arxiv.org/pdf/2011.00677"},
+  @{d="indonesia"; f="I5_2404.06138_Cendol.pdf"; u="https://arxiv.org/pdf/2404.06138"},
+  @{d="indonesia"; f="I6_2404.03608_Sailor.pdf"; u="https://arxiv.org/pdf/2404.03608"},
+  @{d="indonesia"; f="I7_2504.05747_SEA-LION.pdf"; u="https://arxiv.org/pdf/2504.05747"},
+  @{d="indonesia"; f="I8_2310.04928_IndoMMLU.pdf"; u="https://arxiv.org/pdf/2310.04928"},
+  @{d="indonesia"; f="I9_2212.09648_NusaCrowd.pdf"; u="https://arxiv.org/pdf/2212.09648"},
   @{d="wajib";     f="W1_training-time-selection-linear-vs-softmax.pdf"; u="https://openreview.net/pdf?id=4cP69sGjiG"},
   @{d="wajib";     f="W2_2507.06457_systematic-hybrid-linear-attention.pdf"; u="https://arxiv.org/pdf/2507.06457"},
   @{d="wajib";     f="W3_2412.06464_gated-deltanet.pdf"; u="https://arxiv.org/pdf/2412.06464"},
@@ -22,6 +31,7 @@ $papers = @(
   @{d="pendukung"; f="S7_2404.06138_cendol.pdf"; u="https://arxiv.org/pdf/2404.06138"}
 )
 foreach ($p in $papers) {
+  New-Item -ItemType Directory -Force -Path (Join-Path $PSScriptRoot $p.d) | Out-Null
   $out = Join-Path $PSScriptRoot (Join-Path $p.d $p.f)
   if (Test-Path $out) { Write-Host "Sudah ada: $($p.f)"; continue }
   try {

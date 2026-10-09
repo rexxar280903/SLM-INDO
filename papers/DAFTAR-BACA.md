@@ -8,10 +8,26 @@ Centang `[x]` setelah dibaca, dan tulis 2–3 baris catatan di bawah tiap paper 
 | # | Status | Paper | Kenapa dibaca | Fokus saat membaca |
 |---|---|---|---|---|
 | W1 | [ ] | **Training-time Selection of Linear Vs. Softmax Attention in Layer-based Hybrid Transformers** — [OpenReview](https://openreview.net/forum?id=4cP69sGjiG) | Berpotensi tumpang-tindih dengan N2 (*linear-first warm-start*) | Apakah mereka mulai dari semua linear lalu beralih ke softmax? Skala? Hemat compute? |
-| W2 | [ ] | **A Systematic Analysis of Hybrid Linear Attention** — [arXiv 2507.06457](https://arxiv.org/abs/2507.06457) | Rujukan utama rasio hybrid (3:1–6:1) | Tabel rasio vs kualitas/recall, setting training, keterbatasan |
-| W3 | [ ] | **Gated Delta Networks: Improving Mamba2 with Delta Rule** — [arXiv 2412.06464](https://arxiv.org/abs/2412.06464) | Mixer linear utama kita | Rumus Gated DeltaNet, bentuk chunkwise (yang akan kita tulis di JAX) |
+| W2 | [ ] | ✅ diunduh · **A Systematic Analysis of Hybrid Linear Attention** — [arXiv 2507.06457](https://arxiv.org/abs/2507.06457) | Rujukan utama rasio hybrid (3:1–6:1) | Tabel rasio vs kualitas/recall, setting training, keterbatasan |
+| W3 | [ ] | ✅ diunduh · **Gated Delta Networks: Improving Mamba2 with Delta Rule** — [arXiv 2412.06464](https://arxiv.org/abs/2412.06464) | Mixer linear utama kita | Rumus Gated DeltaNet, bentuk chunkwise (yang akan kita tulis di JAX) |
 | W4 | [ ] | **Hybrid Architectures for Language Models: Systematic Analysis and Design Insights** — [arXiv 2510.04800](https://arxiv.org/abs/2510.04800) | Studi hybrid terbaru (Meta), termasuk titik 100M | Rasio 1:5, penempatan layer attention, hasil skala 100M |
-| W5 | [ ] | **IndoNLG (IndoGPT)** — [arXiv 2104.08200](https://arxiv.org/abs/2104.08200) | Pembanding Indonesia dengan backbone sama (768×12) | Data Indo4B-Plus, tokenizer 40k, setting pretraining, PPL |
+| W5 | [ ] | **IndoNLG (IndoGPT)** (= I1) — [arXiv 2104.08200](https://arxiv.org/abs/2104.08200) | Pembanding Indonesia dengan backbone sama (768×12) | Data Indo4B-Plus, tokenizer 40k, setting pretraining, PPL |
+
+## 🇮🇩 Model & benchmark bahasa Indonesia — rujukan & pembanding (folder `indonesia/`)
+
+| # | Status | Paper | Peran untuk kita | Fokus saat membaca |
+|---|---|---|---|---|
+| I1 | [ ] | **IndoNLG (IndoGPT)** — [arXiv 2104.08200](https://arxiv.org/abs/2104.08200) ✅ sudah diunduh | **Pembanding utama**: IndoGPT ±117M, backbone 768×12 = S125 | Data Indo4B-Plus, tokenizer 40k, setting pretraining, PPL validasi |
+| I2 | [ ] | **Goldfish: Monolingual LMs for 350 Languages** — [arXiv 2408.10441](https://arxiv.org/abs/2408.10441) | **Pembanding**: LM Indonesia kecil (≤125M) dari nol | Ukuran model per data, tokenizer, protokol evaluasi FLORES |
+| I3 | [ ] | **IndoNLU** — [arXiv 2009.05387](https://arxiv.org/abs/2009.05387) | Sumber tugas downstream **SmSA** & benchmark NLU | Deskripsi SmSA, split data, metrik (F1) |
+| I4 | [ ] | **IndoLEM & IndoBERT** — [arXiv 2011.00677](https://arxiv.org/abs/2011.00677) | Konteks LM Indonesia & data pretraining | Korpus Indonesia yang dipakai, ukuran data |
+| I5 | [ ] | **Cendol** — [arXiv 2404.06138](https://arxiv.org/abs/2404.06138) | Konteks LLM Indonesia (fine-tune, bukan dari nol) | Bagaimana mereka mengevaluasi kemampuan bahasa Indonesia |
+| I6 | [ ] | **Sailor: Open LMs for South-East Asia** — [arXiv 2404.03608](https://arxiv.org/abs/2404.03608) | Model SEA kecil (0,5B+) termasuk Indonesia; rujukan tokenizer & data | Pembersihan data Indonesia, efisiensi tokenizer |
+| I7 | [ ] | **SEA-LION** — [arXiv 2504.05747](https://arxiv.org/abs/2504.05747) | Model regional SEA; rujukan data & evaluasi | Komposisi data Indonesia, benchmark yang dipakai |
+| I8 | [ ] | **IndoMMLU** — [arXiv 2310.04928](https://arxiv.org/abs/2310.04928) | Benchmark pengetahuan Indonesia (terlalu sulit untuk ≤125M, konteks saja) | Mengapa tidak kita pakai sebagai metrik utama |
+| I9 | [ ] | **NusaCrowd** — [arXiv 2212.09648](https://arxiv.org/abs/2212.09648) | Katalog dataset NLP Indonesia | Sumber data latih/evaluasi tambahan |
+
+Pembanding tanpa paper: `cahya/gpt2-small-indonesian-522M` dan `w11wo/indo-gpt2-small` (hanya model card Hugging Face).
 
 ## 🟡 Penting — minggu 2–3
 

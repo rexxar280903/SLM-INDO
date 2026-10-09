@@ -1,7 +1,7 @@
 # KONSEP PENELITIAN — SLM Efisien untuk Bahasa Indonesia
 
 > **Dokumen hidup.** Ini satu-satunya sumber konsep penelitian. Claude memperbaruinya setiap selesai diskusi.
-> Versi: **v1.2** · Terakhir diperbarui: **2026-10-09** · Fase: **Penyusunan konsep**
+> Versi: **v1.3** · Terakhir diperbarui: **2026-10-09** · Fase: **Penyusunan konsep**
 
 **Penanda status** (dipakai di seluruh dokumen):
 - ✅ **Disepakati**: sudah diputuskan Ken
@@ -481,6 +481,7 @@ Format: tanggal — topik — hasil — keputusan — langkah berikutnya
 - **2026-10-08 · Diskusi #11**: Ken memilih **opsi A** (768×12, backbone GPT-2 small, ±97M total) dan **50M sebagai standar** → D12 ✅, tangga final 10M / 25M / 50M / kelas 125M (S10/S25/S50/S125). Tabel konfigurasi, alokasi TPU, gap, RQ, dan timeline disesuaikan.
 - **2026-10-09 · Diskusi #12**: Ken menyetujui N1+N2 (D8 ✅), fokus TPU (D10 ✅), belajar JAX sambil jalan (D13 ✅), laptop untuk pengujian inferensi (D14 ✅), TRC sebagai opsi (D16). Pertanyaan S10/S25 di GPU + S125 di TPU: bisa tapi tidak disarankan (tren skala tercampur efek hardware, dua jalur kode) → usulan D15. Ditambahkan penjelasan arah A/B, rasio, vocab & non-embedding; studi setara (2510.04800, Based, Zoology, CLA, Hymba, HALO) & pembanding Indonesia (IndoGPT 117M backbone sama dengan S125, GPT-2 Indonesia, Goldfish); §10A metrik & §10B pembanding. Folder dijadikan repo git lokal.
 - **2026-10-09 · Diskusi #13**: Dibuat folder `papers/` (wajib/penting/pendukung) dengan `DAFTAR-BACA.md` (19 paper, prioritas & fokus baca) dan skrip `unduh_paper.ps1`.
+- **2026-10-09 · Diskusi #14**: Ditambahkan 9 paper model/benchmark Indonesia (IndoNLG, Goldfish, IndoNLU, IndoLEM, Cendol, Sailor, SEA-LION, IndoMMLU, NusaCrowd) ke `papers/DAFTAR-BACA.md` (folder `papers/indonesia/`). PDF W2, W3, I1 sudah diunduh; sisanya lewat `unduh_paper.ps1`.
 
 ---
 
@@ -506,3 +507,8 @@ Daftar baca berprioritas: `papers/DAFTAR-BACA.md`.
 - cahya/gpt2-small-indonesian-522M: https://huggingface.co/cahya/gpt2-small-indonesian-522M
 - w11wo/indo-gpt2-small: https://huggingface.co/w11wo/indo-gpt2-small
 - Google Cloud TPU v5e: https://docs.cloud.google.com/tpu/docs/v5e
+- IndoNLU: https://arxiv.org/abs/2009.05387
+- Sailor: https://arxiv.org/abs/2404.03608
+- SEA-LION: https://arxiv.org/abs/2504.05747
+- IndoMMLU: https://arxiv.org/abs/2310.04928
+- NusaCrowd: https://arxiv.org/abs/2212.09648
