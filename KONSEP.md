@@ -369,7 +369,7 @@ Ketat jika hanya 1× T4. T4×2 + DDP untuk S125 sangat dianjurkan.
 | S125: baseline + 2–3 terbaik × 3 seed | 9–12 | ~9–16 |
 | S50 (standar): baseline + 2–3 terbaik × 3 seed | 9–12 | ~3–5 |
 | Cadangan / rerun | – | ~10 |
-| **Total** | | **~46–81 TPU-jam ≈ 3–4 minggu kuota** |
+| **Total** | | **~30–47 TPU-jam ≈ 2–3 minggu kuota** (tanpa 350M) |
 
 Tersedia ±160–200 TPU-jam selama 8–10 minggu, jadi margin besar. Kuota GPU tidak lagi menjadi penentu dan cukup untuk cadangan & benchmark.
 
