@@ -1,0 +1,36 @@
+# Data & tokenized corpora (simpan di Kaggle Datasets, bukan di git)
+data/
+*.bin
+*.npy
+*.npz
+*.arrow
+*.parquet
+*.jsonl.gz
+
+# Checkpoint & bobot model
+checkpoints/
+*.ckpt
+*.msgpack
+*.safetensors
+*.pt
+*.orbax*
+
+# Log eksperimen besar (ringkasan hasil tetap di-commit sebagai .md/.csv kecil)
+runs/**/raw/
+wandb/
+*.log
+
+# Python / Jupyter
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+venv/
+.env
+
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
