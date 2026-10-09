@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="id">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Peta Alur & Arsitektur SLM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: blueprint dokumen teknis — kolom tunggal 1080px, peta alur sebagai rel vertikal bernomor, arsitektur sebagai tumpukan blok berwarna per jenis layer */
+:root{
+  --paper:#f6f7f9; --panel:#ffffff; --ink:#1b2333; --muted:#5a6478; --line:#d6dbe4;
+  --accent:#2f4fd6;          /* biru tinta: alur & aksen */
+  --gdn:#0f8a7e; --gdn-bg:#e3f4f1;    /* Gated DeltaNet (linear) */
+  --attn:#c7700f; --attn-bg:#fbeedd;  /* full attention */
+  --ffn:#6b5bd6; --ffn-bg:#ece9fb;    /* FFN / SwiGLU */
+  --gate:#b4233c; --gate-bg:#fbe7ea;  /* titik keputusan */
+  --tpu:#2f4fd6; --cpu:#5a6478; --gpu:#7a5a12; --lap:#0f8a7e;
+  --f-display:"Archivo",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#11151d; --panel:#181e29; --ink:#e6e9f0; --muted:#9aa3b5; --line:#2c3443;
+  --accent:#8ea3ff; --gdn:#4fd1c0; --gdn-bg:#12302d; --attn:#f2a54a; --attn-bg:#3a2a15;
+  --ffn:#a99cff; --ffn-bg:#272245; --gate:#ff7b90; --gate-bg:#3d1b22;
+  --tpu:#8ea3ff; --cpu:#9aa3b5; --gpu:#e0bf6a; --lap:#4fd1c0; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#11151d; --panel:#181e29; --ink:#e6e9f0; --muted:#9aa3b5; --line:#2c3443;
+  --accent:#8ea3ff; --gdn:#4fd1c0; --gdn-bg:#12302d; --attn:#f2a54a; --attn-bg:#3a2a15;
+  --ffn:#a99cff; --ffn-bg:#272245; --gate:#ff7b90; --gate-bg:#3d1b22;
+  --tpu:#8ea3ff; --cpu:#9aa3b5; --gpu:#e0bf6a; --lap:#4fd1c0; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55;margin:0}
+.wrap{max-width:1080px;margin:0 auto;padding-inline:20px;padding-block:28px 64px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0}
+h1{font-size:clamp(26px,4vw,38px);font-weight:800;letter-spacing:-.01em}
+h2{font-size:24px;font-weight:800;margin-block:8px 6px}
+h3{font-size:16px;font-weight:700}
+p{margin:0;max-width:68ch}
+.mono{font-family:var(--f-mono);font-size:12.5px}
+.eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+header{display:grid;gap:10px;padding-bottom:18px;border-bottom:1px solid var(--line)}
+nav{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+nav a{font-family:var(--f-mono);font-size:12px;color:var(--accent);text-decoration:none;border:1px solid var(--line);padding:4px 10px;border-radius:999px;background:var(--panel)}
+nav a:hover,nav a:focus-visible{border-color:var(--accent);outline:none}
+section{margin-top:40px;display:grid;gap:16px}
+.legend{display:flex;flex-wrap:wrap;gap:8px 14px;font-size:13px;color:var(--muted)}
+.chip{display:inline-flex;align-items:center;gap:6px;font-family:var(--f-mono);font-size:11px;padding:2px 8px;border-radius:4px;border:1px solid currentColor;white-space:nowrap}
+.c-tpu{color:var(--tpu)} .c-cpu{color:var(--cpu)} .c-gpu{color:var(--gpu)} .c-lap{color:var(--lap)}
+/* ===== Peta alur ===== */
+.rail{display:grid;gap:0;position:relative}
+.phase{display:grid;grid-template-columns:56px 1fr;gap:14px;position:relative}
+.phase::before{content:"";position:absolute;left:27px;top:0;bottom:0;width:2px;background:var(--line)}
+.phase:first-child::before{top:22px}.phase:last-child::before{bottom:calc(100% - 22px)}
+.num{position:relative;z-index:1;width:56px;height:44px;display:grid;place-items:center;font-family:var(--f-mono);font-weight:600;font-size:15px;color:var(--accent);background:var(--panel);border:2px solid var(--accent);border-radius:10px;margin-top:6px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px;min-width:0;display:grid;gap:10px}
+.card-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:6px 12px}
+.when{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.steps{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.step{font-size:13px;padding:5px 9px;border-radius:6px;background:var(--paper);border:1px solid var(--line)}
+.arrow{color:var(--muted);font-family:var(--f-mono)}
+.out{font-size:13px;color:var(--muted)} .out b{color:var(--ink)}
+.gate{grid-column:2;display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;background:var(--gate-bg);border:1px dashed var(--gate);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13.5px}
+.gate .dia{width:22px;height:22px;transform:rotate(45deg);border:2px solid var(--gate);background:var(--panel)}
+.gate b{color:var(--gate)}
+.gate-row{display:grid;grid-template-columns:56px 1fr;gap:14px;position:relative}
+.gate-row::before{content:"";position:absolute;left:27px;top:0;bottom:0;width:2px;background:var(--line)}
+/* loop satu run */
+.loop{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;counter-reset:s}
+.lp{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:13px;display:grid;gap:4px;align-content:start}
+.lp .k{font-family:var(--f-mono);font-size:11px;color:var(--accent)}
+.lp.repeat{border-color:var(--accent);border-style:dashed}
+.note{font-size:13px;color:var(--muted)}
+/* ===== Arsitektur ===== */
+.arch{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:22px;align-items:start}
+@media (max-width:820px){.arch{grid-template-columns:1fr}}
+.stack{display:grid;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+.io{font-family:var(--f-mono);font-size:12.5px;text-align:center;padding:8px;border-radius:6px;border:1px solid var(--line);background:var(--paper)}
+.down{text-align:center;color:var(--muted);font-family:var(--f-mono);font-size:12px;line-height:1}
+.blk{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;padding:8px 10px;border-radius:6px;font-size:13px;border-left:5px solid}
+.blk .ln{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.blk .tag{font-family:var(--f-mono);font-size:11px}
+.blk.g{background:var(--gdn-bg);border-color:var(--gdn)} .blk.g .tag{color:var(--gdn)}
+.blk.a{background:var(--attn-bg);border-color:var(--attn)} .blk.a .tag{color:var(--attn)}
+.group{border:1px dashed var(--line);border-radius:8px;padding:6px;display:grid;gap:5px;position:relative}
+.group .gl{font-family:var(--f-mono);font-size:10.5px;color:var(--muted);padding-left:2px}
+.side{display:grid;gap:14px;min-width:0}
+.detail{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:grid;gap:10px;min-width:0}
+.detail.g{border-top:4px solid var(--gdn)} .detail.a{border-top:4px solid var(--attn)} .detail.f{border-top:4px solid var(--ffn)} .detail.n{border-top:4px solid var(--gate)}
+.flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12.5px}
+.flow span.b{padding:4px 8px;border-radius:5px;background:var(--paper);border:1px solid var(--line);font-family:var(--f-mono)}
+.eq{font-family:var(--f-mono);font-size:12.5px;background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:8px 10px;overflow-x:auto;white-space:nowrap}
+ul.tight{margin:0;padding-left:18px;display:grid;gap:3px;font-size:13.5px}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
+th,td{padding:8px 12px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+tr:last-child td{border-bottom:0}
+.n2{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center}
+@media (max-width:520px){.n2{grid-template-columns:1fr}.n2 .mid{transform:rotate(90deg);justify-self:center}}
+.mini{display:grid;grid-template-columns:repeat(12,1fr);gap:3px}
+.mini i{height:26px;border-radius:3px;display:block}
+.mini i.g{background:var(--gdn)} .mini i.a{background:var(--attn)}
+.mid{font-family:var(--f-mono);color:var(--muted);font-size:12px;text-align:center}
+.cap{font-size:12px;color:var(--muted);margin-top:4px}
+footer{margin-top:40px;padding-top:14px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+@media (prefers-reduced-motion:no-preference){nav a{transition:border-color .15s}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header>
+  <span class="eyebrow">Riset SLM · KONSEP.md v2.1 · rancangan, belum hasil</span>
+  <h1>Peta Alur Training &amp; Arsitektur SLM Indonesia</h1>
+  <p>Dari teks mentah sampai model jadi, lalu bagian dalam model hybrid kita: Gated DeltaNet + full attention (rasio 3:1) dengan GQA, kelas 125M, vocab 16k, dilatih dari nol di TPU v5e-8.</p>
+  <nav><a href="#alur">1 · Peta alur</a><a href="#run">2 · Satu run training</a><a href="#arsitektur">3 · Arsitektur</a><a href="#n2">4 · Metode N2</a><a href="#skala">5 · Tangga skala</a></nav>
+</header>
+
+<!-- ============ 1. PETA ALUR ============ -->
+<section id="alur">
+  <span class="eyebrow">Bagian 1</span>
+  <h2>Peta alur penelitian, dari data sampai rilis</h2>
+  <div class="legend">
+    <span>Tempat kerja:</span>
+    <span class="chip c-tpu">TPU v5e-8</span><span class="chip c-cpu">CPU Kaggle</span><span class="chip c-gpu">GPU T4×2</span><span class="chip c-lap">Laptop 5500U</span>
+    <span>· belah ketupat merah = titik keputusan</span>
+  </div>
+
+  <div class="rail">
+    <div class="phase"><div class="num">0</div><div class="card">
+      <div class="card-head"><h3>Persiapan</h3><span class="when">minggu 1</span></div>
+      <div class="steps"><span class="step">Belajar dasar JAX / Flax / Optax</span><span class="step">Setup repo git &amp; struktur folder</span><span class="step">Baca paper W1–W5</span><span class="step">Siapkan notebook Kaggle</span></div>
+      <div class="out">Tempat: <span class="chip c-lap">Laptop</span> <span class="chip c-cpu">CPU Kaggle</span> · Keluaran: <b>kerangka kode, catatan literatur</b></div>
+    </div></div>
+
+    <div class="gate-row"><div></div><div class="gate"><span class="dia"></span><span><b>Keputusan A · Novelty N2:</b> apakah paper "Training-time Selection" sama dengan N2? Jika mirip → posisikan N2 sebagai varian, atau fokus N1.</span></div></div>
+
+    <div class="phase"><div class="num">1</div><div class="card">
+      <div class="card-head"><h3>Data: dari korpus mentah ke data bersih</h3><span class="when">minggu 1–2</span></div>
+      <div class="steps"><span class="step">Unduh FineWeb-2 <span class="mono">ind_Latn</span> / CulturaX <span class="mono">id</span></span><span class="arrow">→</span><span class="step">Filter bahasa &amp; kualitas</span><span class="arrow">→</span><span class="step">Deduplikasi (exact + MinHash)</span><span class="arrow">→</span><span class="step">Dekontaminasi vs FLORES, Wikipedia uji, SmSA</span><span class="arrow">→</span><span class="step">Split train / val / test</span></div>
+      <div class="out">Tempat: <span class="chip c-cpu">CPU Kaggle</span> · Keluaran: <b>±8–10 GB teks Indonesia bersih (±2B token)</b> + set uji terpisah</div>
+    </div></div>
+
+    <div class="phase"><div class="num">2</div><div class="card">
+      <div class="card-head"><h3>Tokenizer: dilatih sendiri dari nol</h3><span class="when">minggu 2</span></div>
+      <div class="steps"><span class="step">Sampel ±1 GB teks</span><span class="arrow">→</span><span class="step">SentencePiece 16k (+8k, 32k untuk ablation)</span><span class="arrow">→</span><span class="step">Ukur fertility &amp; karakter/token</span><span class="arrow">→</span><span class="step">Tokenisasi seluruh korpus</span><span class="arrow">→</span><span class="step">Simpan shard biner <span class="mono">uint16</span> (±4 GB)</span><span class="arrow">→</span><span class="step">Unggah ke Kaggle Dataset (privat)</span></div>
+      <div class="out">Tempat: <span class="chip c-cpu">CPU Kaggle</span> · Keluaran: <b>tokenizer 16k + data siap pakai di TPU</b></div>
+    </div></div>
+
+    <div class="phase"><div class="num">3</div><div class="card">
+      <div class="card-head"><h3>Implementasi model di JAX</h3><span class="when">minggu 1–3</span></div>
+      <div class="steps"><span class="step">RMSNorm, SwiGLU, RoPE</span><span class="step">Attention: MHA / GQA / MLA / CLA</span><span class="step">Gated DeltaNet (bentuk chunkwise)</span><span class="step">Penghitung FLOPs &amp; parameter</span><span class="step">Checkpoint &amp; resume</span><span class="step">Tes: chunkwise = rekuren naif</span></div>
+      <div class="out">Tempat: <span class="chip c-lap">Laptop</span> (menulis kode) <span class="chip c-cpu">CPU Kaggle</span> (tes) · Keluaran: <b>satu codebase untuk semua varian (B0–B3, OURS)</b></div>
+    </div></div>
+
+    <div class="phase"><div class="num">4</div><div class="card">
+      <div class="card-head"><h3>Uji kelayakan TPU</h3><span class="when">minggu 1–2</span></div>
+      <div class="steps"><span class="step">Jalankan S10 dari awal sampai akhir</span><span class="arrow">→</span><span class="step">Ukur token/detik, MFU, waktu kompilasi</span><span class="arrow">→</span><span class="step">Uji putus–lanjut (resume) dari checkpoint</span><span class="arrow">→</span><span class="step">Kalibrasi estimasi jam TPU</span></div>
+      <div class="out">Tempat: <span class="chip c-tpu">TPU v5e-8</span> · Keluaran: <b>angka throughput nyata, anggaran TPU terkalibrasi</b></div>
+    </div></div>
+
+    <div class="gate-row"><div></div><div class="gate"><span class="dia"></span><span><b>Keputusan B · Hardware:</b> TPU lolos (stabil, cepat, resume jalan)? Ya → semua training di TPU. Tidak → pindah ke GPU T4×2 dengan skala lebih kecil.</span></div></div>
+
+    <div class="phase"><div class="num">5</div><div class="card">
+      <div class="card-head"><h3>Baseline</h3><span class="when">minggu 3–4</span></div>
+      <div class="steps"><span class="step">B0 Transformer (S10, S25)</span><span class="step">B2 pure Gated DeltaNet (S10, S25)</span><span class="step">Sweep learning rate kecil</span><span class="step">Probe MQAR</span><span class="step"><b>Mulai B0-S125</b> lebih awal</span></div>
+      <div class="out">Tempat: <span class="chip c-tpu">TPU v5e-8</span> · Keluaran: <b>kurva acuan + resep training tetap</b> (LR, warmup, batch)</div>
+    </div></div>
+
+    <div class="phase"><div class="num">6</div><div class="card">
+      <div class="card-head"><h3>Grid utama &amp; eksperimen N2</h3><span class="when">minggu 5–7</span></div>
+      <div class="steps"><span class="step">S10: ±17 konfigurasi (rasio × varian KV)</span><span class="arrow">→</span><span class="step">S25: ±17 konfigurasi, 5 terbaik × 3 seed</span><span class="step">Ablation vocab 8k/16k/32k (S25)</span><span class="step">N2: titik alih 10% / 25% / 50%</span><span class="step">Replikasi kecil di T4 (RQ3)</span></div>
+      <div class="out">Tempat: <span class="chip c-tpu">TPU v5e-8</span> <span class="chip c-gpu">GPU T4×2</span> · Keluaran: <b>tabel hasil utama, 2–3 konfigurasi terbaik</b></div>
+    </div></div>
+
+    <div class="gate-row"><div></div><div class="gate"><span class="dia"></span><span><b>Keputusan C · Konsistensi:</b> konfigurasi terbaik di S10 dan S25 sama? Ya → bawa ke S50 & S125. Tidak → bawa 3–4 kandidat dan catat sebagai temuan.</span></div></div>
+
+    <div class="phase"><div class="num">7</div><div class="card">
+      <div class="card-head"><h3>Naik skala</h3><span class="when">minggu 7–9</span></div>
+      <div class="steps"><span class="step">S50: baseline + 2–3 terbaik × 3 seed</span><span class="arrow">→</span><span class="step">S125: baseline + 2–3 terbaik × 3 seed</span><span class="arrow">→</span><span class="step">Pilih <b>OURS</b> final</span></div>
+      <div class="out">Tempat: <span class="chip c-tpu">TPU v5e-8</span> · Keluaran: <b>model final kelas 125M + checkpoint</b></div>
+    </div></div>
+
+    <div class="phase"><div class="num">8</div><div class="card">
+      <div class="card-head"><h3>Evaluasi</h3><span class="when">minggu 8–9</span></div>
+      <div class="steps"><span class="step">bpb FLORES / web / Wikipedia</span><span class="step">MQAR &amp; passkey</span><span class="step">Fine-tune SmSA → macro-F1</span><span class="step">KV-cache &amp; memori puncak</span><span class="step">Latensi &amp; throughput CPU / T4 / TPU</span><span class="step">Evaluasi pembanding IndoGPT, GPT-2 Indo, Goldfish</span></div>
+      <div class="out">Tempat: <span class="chip c-tpu">TPU</span> <span class="chip c-gpu">T4</span> <span class="chip c-lap">Laptop</span> (benchmark CPU) · Keluaran: <b>tabel R1 (kualitas) &amp; R2 (efisiensi)</b></div>
+    </div></div>
+
+    <div class="phase"><div class="num">9</div><div class="card">
+      <div class="card-head"><h3>Analisis, penulisan &amp; rilis</h3><span class="when">minggu 10–12</span></div>
+      <div class="steps"><span class="step">Statistik: mean ± std, bootstrap CI</span><span class="step">6 grafik hasil (bpb vs FLOPs, Pareto KV, dll.)</span><span class="step">Tulis paper</span><span class="step">Preprint arXiv</span><span class="step">Submit jurnal Scopus / SINTA</span><span class="step">Rilis model + tokenizer (Hugging Face) &amp; kode (GitHub)</span></div>
+      <div class="out">Keluaran: <b>paper, preprint, portofolio terbuka</b></div>
+    </div></div>
+  </div>
+</section>
+
+<!-- ============ 2. SATU RUN ============ -->
+<section id="run">
+  <span class="eyebrow">Bagian 2</span>
+  <h2>Apa yang terjadi dalam satu run training</h2>
+  <p class="note">Sama untuk semua model dan skala; yang berbeda hanya konfigurasi arsitektur dan ukuran. Langkah 4–7 diulang ribuan kali.</p>
+  <div class="loop">
+    <div class="lp"><span class="k">1 · Konfigurasi</span>Skala (S10–S125), jenis layer, rasio, varian KV, seed, budget token</div>
+    <div class="lp"><span class="k">2 · Inisialisasi</span>Bobot acak (dari nol), optimizer AdamW, jadwal LR warmup + cosine</div>
+    <div class="lp"><span class="k">3 · Data loader</span>Baca shard uint16 → potong urutan 2048 token → batch dibagi ke 8 chip</div>
+    <div class="lp repeat"><span class="k">4 · Forward ↻</span>Token → embedding → 12 blok → logit 16k → loss cross-entropy (tebak token berikutnya)</div>
+    <div class="lp repeat"><span class="k">5 · Backward ↻</span>Gradien dihitung otomatis (<span class="mono">jax.grad</span>), presisi bf16, clip gradien 1,0</div>
+    <div class="lp repeat"><span class="k">6 · Update ↻</span>AdamW memperbarui bobot; LR mengikuti jadwal</div>
+    <div class="lp repeat"><span class="k">7 · Log ↻</span>Loss, bpb, token/detik tiap N langkah; eval val tiap M langkah; checkpoint tiap 30–60 menit</div>
+    <div class="lp"><span class="k">8 · Selesai</span>Budget token habis → evaluasi akhir → simpan checkpoint final + ringkasan hasil ke <span class="mono">runs/</span></div>
+  </div>
+  <p class="note">Varian N2: di langkah tertentu (10%, 25%, atau 50% dari total), layer 4, 8, 12 dialihkan dari linear ke full attention, lalu training berlanjut. Lihat bagian 4.</p>
+</section>
+
+<!-- ============ 3. ARSITEKTUR ============ -->
+<section id="arsitektur">
+  <span class="eyebrow">Bagian 3</span>
+  <h2>Arsitektur OURS (target): hybrid 3:1 + GQA, kelas 125M</h2>
+  <div class="legend"><span class="chip" style="color:var(--gdn)">Gated DeltaNet · linear</span><span class="chip" style="color:var(--attn)">Full attention · GQA</span><span class="chip" style="color:var(--ffn)">FFN SwiGLU (di setiap blok)</span></div>
+
+  <div class="arch">
+    <div class="stack" aria-label="Tumpukan layer model">
+      <div class="io">Teks Indonesia → tokenizer 16k → ID token</div>
+      <div class="down">▼</div>
+      <div class="io">Embedding 16.000 × 768 <span style="color:var(--muted)">(±12,3M param, di-tie dengan LM head)</span></div>
+      <div class="down">▼</div>
+      <div class="group"><span class="gl">grup 1</span>
+        <div class="blk g"><span class="ln">L1</span><span>Gated DeltaNet + FFN</span><span class="tag">linear</span></div>
+        <div class="blk g"><span class="ln">L2</span><span>Gated DeltaNet + FFN</span><span class="tag">linear</span></div>
+        <div class="blk g"><span class="ln">L3</span><span>Gated DeltaNet + FFN</span><span class="tag">linear</span></div>
+        <div class="blk a"><span class="ln">L4</span><span>Full attention (GQA) + FFN</span><span class="tag">KV-cache</span></div>
+      </div>
+      <div class="group"><span class="gl">grup 2</span>
+        <div class="blk g"><span class="ln">L5</span><span>Gated DeltaNet + FFN</span><span class="tag">linear</span></div>
+        <div class="blk g"><span class="ln">L6</span><span>Gated DeltaNet + FFN</span><span class="tag">linear</span></div>
+        <div class="blk g"><span class="ln">L7</span><span>Gated DeltaNet + FFN</span><span class="tag">linear</span></div>
+        <div class="blk a"><span class="ln">L8</span><span>Full attention (GQA) + FFN</span><span class="tag">KV-cache</span></div>
+      </div>
+      <div class="group"><span class="gl">grup 3</span>
+        <div class="blk g"><span class="ln">L9</span><span>Gated DeltaNet + FFN</span><span class="tag">linear</span></div>
+        <div class="blk g"><span class="ln">L10</span><span>Gated DeltaNet + FFN</span><span class="tag">linear</span></div>
+        <div class="blk g"><span class="ln">L11</span><span>Gated DeltaNet + FFN</span><span class="tag">linear</span></div>
+        <div class="blk a"><span class="ln">L12</span><span>Full attention (GQA) + FFN</span><span class="tag">KV-cache</span></div>
+      </div>
+      <div class="down">▼</div>
+      <div class="io">RMSNorm akhir → LM head (bobot = embedding) → probabilitas 16.000 token</div>
+      <div class="down">▼</div>
+      <div class="io">Token berikutnya</div>
+      <p class="cap">Attention diletakkan di akhir tiap grup (bukan di layer awal), sesuai temuan 2510.04800. Hanya L4, L8, L12 yang menyimpan KV-cache → 4× lebih kecil dari Transformer 12 layer, lalu GQA memangkas 3× lagi.</p>
+    </div>
+
+    <div class="side">
+      <div class="detail f">
+        <h3>Isi setiap blok (pre-norm)</h3>
+        <div class="flow"><span class="b">x</span>→<span class="b">RMSNorm</span>→<span class="b">Mixer</span>→<span class="b">+ x</span>→<span class="b">RMSNorm</span>→<span class="b">FFN SwiGLU</span>→<span class="b">+</span></div>
+        <ul class="tight"><li><b>Mixer</b> = Gated DeltaNet (9 layer) atau full attention (3 layer)</li><li><b>FFN SwiGLU</b>: 768 → 2048 → 768, sama di semua blok</li><li>Sambungan residual (<span class="mono">+ x</span>) menjaga aliran gradien</li></ul>
+      </div>
+      <div class="detail g">
+        <h3>Gated DeltaNet: memori tetap ("buku catatan")</h3>
+        <div class="flow"><span class="b">x</span>→<span class="b">proyeksi q, k, v</span>→<span class="b">conv pendek</span>→<span class="b">gerbang α (lupa), β (tulis)</span>→<span class="b">update state S</span>→<span class="b">o = S·q</span>→<span class="b">gate + norm</span></div>
+        <div class="eq">S<sub>t</sub> = α<sub>t</sub> · S<sub>t−1</sub> · (I − β<sub>t</sub> k<sub>t</sub> k<sub>t</sub><sup>⊤</sup>) + β<sub>t</sub> v<sub>t</sub> k<sub>t</sub><sup>⊤</sup></div>
+        <ul class="tight"><li>12 head × state 64 × 64 per layer → ukuran <b>tetap</b>, tidak tumbuh dengan panjang teks</li><li>α memudarkan ingatan lama; β menimpa ingatan untuk kunci yang sama (aturan delta)</li><li>Training memakai bentuk <b>chunkwise</b> (perkalian matriks per potongan) → cocok untuk TPU</li></ul>
+      </div>
+      <div class="detail a">
+        <h3>Full attention + GQA: ingatan tajam</h3>
+        <div class="flow"><span class="b">x</span>→<span class="b">Q (12 head)</span><span class="b">K, V (4 head)</span>→<span class="b">RoPE</span>→<span class="b">softmax(QKᵀ/√d)·V</span>→<span class="b">proyeksi O</span></div>
+        <ul class="tight"><li>Melihat <b>semua</b> token sebelumnya secara langsung → recall kuat</li><li>GQA: 3 head query berbagi 1 pasang key/value → KV-cache 3× lebih kecil</li><li>Varian lain yang diuji di grid: MHA, MLA, CLA</li></ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="tbl"><table>
+    <thead><tr><th>Komponen</th><th>Nilai (S125)</th><th>Keterangan</th></tr></thead>
+    <tbody>
+      <tr><td>d_model × layer</td><td>768 × 12</td><td>backbone sama dengan GPT-2 small / IndoGPT</td></tr>
+      <tr><td>Head</td><td>12 × 64</td><td>GQA: 4 head KV</td></tr>
+      <tr><td>FFN</td><td>SwiGLU 2048</td><td>±8·d² parameter per blok</td></tr>
+      <tr><td>Vocab</td><td>16.000</td><td>embedding di-tie</td></tr>
+      <tr><td>Parameter</td><td>±97M total · ±85M non-embedding</td><td>estimasi</td></tr>
+      <tr><td>Konteks latih</td><td>2048 token</td><td>diuji sampai 8k</td></tr>
+      <tr><td>KV-cache / 1.000 token</td><td>±3,1 MB (target)</td><td>Transformer biasa ±36,9 MB</td></tr>
+      <tr><td>Presisi</td><td>bf16</td><td>native di TPU</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ============ 4. N2 ============ -->
+<section id="n2">
+  <span class="eyebrow">Bagian 4</span>
+  <h2>Metode N2: linear-first warm-start</h2>
+  <p>Ide: awal training paling boros compute, jadi di fase awal semua layer memakai Gated DeltaNet yang murah. Setelah titik alih, layer 4, 8, 12 diubah menjadi full attention dengan memakai ulang proyeksi Q, K, V, O yang bentuknya sama, lalu training berlanjut.</p>
+  <div class="detail n">
+    <div class="n2">
+      <div><div class="eyebrow">Fase 1 · 0% → titik alih</div><div class="mini" aria-label="12 layer linear"><i class="g"></i><i class="g"></i><i class="g"></i><i class="g"></i><i class="g"></i><i class="g"></i><i class="g"></i><i class="g"></i><i class="g"></i><i class="g"></i><i class="g"></i><i class="g"></i></div><p class="cap">12 layer linear: paling murah</p></div>
+      <div class="mid">alih di<br>10% / 25% / 50%<br>→</div>
+      <div><div class="eyebrow">Fase 2 · titik alih → selesai</div><div class="mini" aria-label="hybrid 3:1"><i class="g"></i><i class="g"></i><i class="g"></i><i class="a"></i><i class="g"></i><i class="g"></i><i class="g"></i><i class="a"></i><i class="g"></i><i class="g"></i><i class="g"></i><i class="a"></i></div><p class="cap">Hybrid 3:1: L4, L8, L12 jadi attention</p></div>
+    </div>
+    <p class="note">Dibandingkan dengan hybrid 3:1 yang dilatih dari awal (B3/OURS). Hipotesis H4: hemat ≥10–20% compute untuk mencapai bpb yang sama. Status: novelty perlu dicek terhadap paper W1.</p>
+  </div>
+</section>
+
+<!-- ============ 5. SKALA ============ -->
+<section id="skala">
+  <span class="eyebrow">Bagian 5</span>
+  <h2>Tangga skala yang dilatih</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Nama</th><th>d_model × layer</th><th>Param total</th><th>Non-embedding</th><th>Token latih</th><th>Waktu/run TPU (est.)</th><th>Peran</th></tr></thead>
+    <tbody>
+      <tr><td>S10</td><td>256 × 8</td><td>±10,5M</td><td>±6M</td><td>0,2B</td><td>&lt; 1 mnt + kompilasi</td><td>saring banyak ide</td></tr>
+      <tr><td>S25</td><td>384 × 10</td><td>±24M</td><td>±18M</td><td>0,5B</td><td>2–5 mnt</td><td>grid utama, N2, ablation vocab</td></tr>
+      <tr><td>S50</td><td>512 × 14</td><td>±52M</td><td>±44M</td><td>1B</td><td>10–20 mnt</td><td>titik tengah tren</td></tr>
+      <tr><td>S125</td><td>768 × 12</td><td>±97M</td><td>±85M</td><td>2B</td><td>40–80 mnt</td><td>model final &amp; pembanding eksternal</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<footer>Rancangan dari KONSEP.md v2.1 (2026-10-09). Semua angka adalah estimasi; nilai final mengikuti hasil uji kelayakan TPU dan studi literatur. Rasio, varian KV, dan penempatan layer masih diuji di grid; OURS di sini adalah konfigurasi target.</footer>
+</div>
+
+</body>
+</html>

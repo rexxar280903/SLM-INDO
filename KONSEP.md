@@ -1,7 +1,7 @@
 # KONSEP PENELITIAN — SLM Efisien untuk Bahasa Indonesia
 
 > **Dokumen hidup.** Ini satu-satunya sumber konsep penelitian. Claude memperbaruinya setiap selesai diskusi.
-> Versi: **v2.1** · Terakhir diperbarui: **2026-10-09** · Fase: **Konsep final, siap mulai minggu 1**
+> Versi: **v2.2** · Terakhir diperbarui: **2026-10-09** · Fase: **Konsep final, siap mulai minggu 1**
 
 **Penanda status** (dipakai di seluruh dokumen):
 - ✅ **Disepakati**: sudah diputuskan Ken
@@ -623,6 +623,7 @@ Format: tanggal — topik — hasil — keputusan — langkah berikutnya
 - **2026-10-09 · Diskusi #17**: Ken menyetujui D15 (semua training di TPU) dan target jurnal Scopus & SINTA (D19). Rekomendasi: vocab 16k + ablation di S25 (D20), 350M sebagai stretch goal bersyarat (D21), metrik inti vs pelengkap + cek kontaminasi (D22).
 - **2026-10-09 · Diskusi #18**: Ken menolak jangkar 350M (D21 ❌) dan menyetujui sisanya: vocab 16k + ablation di S25 (D20 ✅), metrik inti vs pelengkap (D22 ✅), metrik/pembanding §10A–§10C (D17, D18 ✅). **Konsep dinyatakan final (v2.0)**. Berikutnya: minggu 1.
 - **2026-10-09 · Diskusi #19**: Ditambahkan penjelasan tiap metrik (fungsi, satuan, arah lebih baik, contoh) di §10C.
+- **2026-10-09 · Diskusi #20**: Dibuat visualisasi `visual/peta-alur-arsitektur.html`: peta alur 10 fase (data → tokenizer → implementasi → uji TPU → baseline → grid & N2 → naik skala → evaluasi → rilis) dengan 3 titik keputusan, isi satu run training, diagram arsitektur hybrid 3:1 + GQA (S125), skema N2, tangga skala.
 
 ---
 
