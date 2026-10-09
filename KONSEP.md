@@ -1,7 +1,7 @@
 # KONSEP PENELITIAN — SLM Efisien untuk Bahasa Indonesia
 
 > **Dokumen hidup.** Ini satu-satunya sumber konsep penelitian. Claude memperbaruinya setiap selesai diskusi.
-> Versi: **v1.1** · Terakhir diperbarui: **2026-10-09** · Fase: **Penyusunan konsep**
+> Versi: **v1.2** · Terakhir diperbarui: **2026-10-09** · Fase: **Penyusunan konsep**
 
 **Penanda status** (dipakai di seluruh dokumen):
 - ✅ **Disepakati**: sudah diputuskan Ken
@@ -480,10 +480,13 @@ Format: tanggal — topik — hasil — keputusan — langkah berikutnya
 - **2026-10-08 · Diskusi #10**: Ken bertanya 100M atau 125M. Usulan D12: 'kelas 125M' = backbone GPT-2 small (768×12, ±85M non-embedding); total tergantung vocab (±97M di 16k). Alasan: ukuran rujukan umum termasuk Goldfish ind_latn (≤125M, eval FLORES). Biaya tambahan di TPU kecil. Titik 50M diusulkan jadi standar. FLORES-200 ind_Latn ditambahkan ke evaluasi.
 - **2026-10-08 · Diskusi #11**: Ken memilih **opsi A** (768×12, backbone GPT-2 small, ±97M total) dan **50M sebagai standar** → D12 ✅, tangga final 10M / 25M / 50M / kelas 125M (S10/S25/S50/S125). Tabel konfigurasi, alokasi TPU, gap, RQ, dan timeline disesuaikan.
 - **2026-10-09 · Diskusi #12**: Ken menyetujui N1+N2 (D8 ✅), fokus TPU (D10 ✅), belajar JAX sambil jalan (D13 ✅), laptop untuk pengujian inferensi (D14 ✅), TRC sebagai opsi (D16). Pertanyaan S10/S25 di GPU + S125 di TPU: bisa tapi tidak disarankan (tren skala tercampur efek hardware, dua jalur kode) → usulan D15. Ditambahkan penjelasan arah A/B, rasio, vocab & non-embedding; studi setara (2510.04800, Based, Zoology, CLA, Hymba, HALO) & pembanding Indonesia (IndoGPT 117M backbone sama dengan S125, GPT-2 Indonesia, Goldfish); §10A metrik & §10B pembanding. Folder dijadikan repo git lokal.
+- **2026-10-09 · Diskusi #13**: Dibuat folder `papers/` (wajib/penting/pendukung) dengan `DAFTAR-BACA.md` (19 paper, prioritas & fokus baca) dan skrip `unduh_paper.ps1`.
 
 ---
 
 ## 16. Referensi
+Daftar baca berprioritas: `papers/DAFTAR-BACA.md`.
+
 - A Systematic Analysis of Hybrid Linear Attention: https://arxiv.org/abs/2507.06457
 - Gated DeltaNet / Parallelizing Linear Transformers with the Delta Rule (NeurIPS 2024)
 - LLM Architecture Gallery: Hybrid Attention (S. Raschka): https://sebastianraschka.com/llm-architecture-gallery/hybrid-attention/

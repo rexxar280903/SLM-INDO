@@ -34,3 +34,6 @@ Thumbs.db
 desktop.ini
 .vscode/
 .idea/
+
+# PDF paper (unduh lokal, jangan di-commit)
+papers/**/*.pdf
