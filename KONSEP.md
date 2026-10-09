@@ -1,7 +1,7 @@
 # KONSEP PENELITIAN — SLM Efisien untuk Bahasa Indonesia
 
 > **Dokumen hidup.** Ini satu-satunya sumber konsep penelitian. Claude memperbaruinya setiap selesai diskusi.
-> Versi: **v1.5** · Terakhir diperbarui: **2026-10-09** · Fase: **Penyusunan konsep**
+> Versi: **v1.6** · Terakhir diperbarui: **2026-10-09** · Fase: **Penyusunan konsep**
 
 **Penanda status** (dipakai di seluruh dokumen):
 - ✅ **Disepakati**: sudah diputuskan Ken
@@ -126,10 +126,14 @@ Usulan Ken (S10 & S25 di GPU, S125 di TPU) secara teknis **bisa**, tetapi tidak 
 | D12 | 2026-10-08 | Tangga skala final **10M / 25M / 50M / kelas 125M**. Skala terbesar = **opsi A**: 768 × 12 (backbone GPT-2 small, ±85M non-embedding, ±97M total dengan vocab 16k). Titik 50M standar | ✅ |
 | D13 | 2026-10-09 | Framework: **JAX** (+ Flax/Optax); Ken belajar sambil jalan | ✅ |
 | D14 | 2026-10-09 | Laptop dipakai untuk menulis kode & **pengujian/benchmark inferensi**, bukan training | ✅ |
-| D15 | 2026-10-09 | Pembagian hardware: semua training di TPU; GPU untuk cadangan + benchmark + replikasi kecil S25 (RQ3) | 🟡 usulan, menunggu Ken |
+| D15 | 2026-10-09 | Pembagian hardware: semua training di TPU; GPU untuk cadangan + benchmark + replikasi kecil S25 (RQ3) | ✅ (disetujui 2026-10-09) |
 | D16 | 2026-10-09 | Program TPU Research Cloud (TRC) sebagai opsi tambahan compute | 🟡 opsi |
 | D17 | 2026-10-09 | Metrik evaluasi & daftar pembanding sesuai §10A–§10B | 🟡 usulan |
 | D18 | 2026-10-09 | Rencana perbandingan hasil: G1 internal (klaim utama), G2 eksternal Indonesia (rujukan), G3 literatur — §10C | 🟡 usulan |
+| D19 | 2026-10-09 | Target publikasi: **jurnal Scopus & SINTA** (venue lain diperbolehkan); preprint arXiv lebih dulu bila kebijakan jurnal mengizinkan | ✅ |
+| D20 | 2026-10-09 | Vocab: **16k sebagai default** untuk semua skala + ablation vocab kecil (8k/16k/32k) di S25 untuk RQ5 | 🟡 usulan |
+| D21 | 2026-10-09 | Jangkar ±350M: **opsional (stretch goal)**, hanya B0 + OURS, dijalankan bila S125 selesai ≤ minggu 8 dan sisa kuota ≥35 TPU-jam | 🟡 usulan |
+| D22 | 2026-10-09 | Metrik dibagi **inti** (wajib) dan **pelengkap** (dikerjakan bila waktu cukup), lihat §10A | 🟡 usulan |
 
 ---
 
@@ -321,7 +325,7 @@ Catatan umum: klaim arsitektur butuh ≥2–3 skala; 20 token/parameter hanya pa
 | Referensi eksternal | Goldfish `ind_latn` (≤125M; bandingkan via bpb) | 🟡 |
 | Evaluasi pembanding | FLORES-200 `ind_Latn` (dipakai Goldfish → perbandingan langsung) | 🟡 |
 
-**Tokenizer:** SentencePiece (BPE/Unigram + byte-fallback), dilatih sendiri dari nol di sesi CPU Kaggle/TPU-VM (bukan laptop, sesuai D14) dari ~1 GB teks Indonesia. Vocab yang dibandingkan: 8k / 16k / 32k. ❓
+**Tokenizer:** SentencePiece (BPE/Unigram + byte-fallback), dilatih sendiri dari nol di sesi CPU Kaggle/TPU-VM (bukan laptop, sesuai D14) dari ~1 GB teks Indonesia. Vocab: **16k default** (D20); ablation 8k / 16k / 32k hanya di S25 (±9 run × 3–5 mnt TPU). 🟡
 
 ---
 
@@ -392,6 +396,11 @@ Tersedia ±160–200 TPU-jam selama 8–10 minggu, jadi margin besar. Kuota GPU 
 | **Kecepatan inferensi** | Latensi *prefill*; latensi decode (ms/token); throughput (token/detik) | Median dari ≥5 ulangan | **CPU laptop 5500U** (utama, edge), T4, TPU; batch 1 & batch besar |
 | **Ukuran model** | Parameter total & non-embedding; ukuran file bobot | Hitung langsung | bf16/fp32 (opsional int8) |
 | **Statistik** | Mean ± std (3 seed); bootstrap 95% CI; uji bootstrap berpasangan untuk selisih bpb | – | Semua perbandingan utama |
+
+**Prioritas metrik (D22)**
+- **Inti (wajib, masuk paper):** bpb FLORES-200 & bpb web held-out; akurasi MQAR; compute untuk mencapai bpb target (kurva bpb vs FLOPs); KV-cache + memori puncak; latensi decode CPU laptop; SmSA macro-F1 (aplikasi nyata, disukai reviewer jurnal Indonesia).
+- **Pelengkap (bila waktu cukup):** bpb Wikipedia ID; passkey 2k–8k; throughput T4 & TPU; MFU; ukuran file int8.
+- **Wajib dilaporkan juga:** cek kontaminasi data uji (deduplikasi n-gram antara data latih dan FLORES/Wikipedia/SmSA), serta 3 seed + CI untuk semua angka inti.
 
 Catatan: benchmark zero-shot penalaran (HellaSwag dkk.) tidak dipakai sebagai bukti utama karena hampir acak di skala ≤125M.
 
@@ -561,11 +570,10 @@ Catatan: dalam 3 bulan target realistis adalah preprint + submit jurnal, karena 
 ---
 
 ## 13. Pertanyaan Terbuka ❓
-1. Setuju pembagian hardware D15 (semua training di TPU; GPU untuk cadangan, benchmark & replikasi kecil)?
-2. Jenis jurnal target: Scopus / SINTA / internasional lainnya?
-3. Vocab tokenizer: uji 8k/16k/32k, atau langsung pilih 16k? (tabel S10–S125 mengasumsikan 16k)
-4. Jangkar ±350M dimasukkan ke rencana (opsional, ±16–34 TPU-jam)?
-5. Setuju metrik & pembanding §10A–§10B?
+1. Setuju usulan D20 (vocab 16k + ablation 8k/16k/32k di S25)?
+2. Setuju usulan D21 (350M sebagai stretch goal bersyarat)?
+3. Setuju usulan D22 (metrik inti vs pelengkap)?
+4. Daftar calon jurnal Scopus/SINTA: perlu diverifikasi indeks & scope-nya sebelum menulis (minggu 9–10).
 
 ---
 
@@ -595,6 +603,7 @@ Format: tanggal — topik — hasil — keputusan — langkah berikutnya
 - **2026-10-09 · Diskusi #14**: Ditambahkan 9 paper model/benchmark Indonesia (IndoNLG, Goldfish, IndoNLU, IndoLEM, Cendol, Sailor, SEA-LION, IndoMMLU, NusaCrowd) ke `papers/DAFTAR-BACA.md` (folder `papers/indonesia/`). PDF W2, W3, I1 sudah diunduh; sisanya lewat `unduh_paper.ps1`.
 - **2026-10-09 · Diskusi #15**: Klarifikasi istilah: "pretraining" di §9 = proses melatih model kita dari nol, bukan memakai model jadi. Ditambahkan ke glosarium; tokenizer dilatih di CPU Kaggle/TPU-VM, bukan laptop.
 - **2026-10-09 · Diskusi #16**: Ditambahkan §10C rencana perbandingan hasil: 3 kelompok (G1 internal compute-matched, G2 IndoGPT/GPT-2 Indo/Goldfish, G3 literatur), tabel data 8 model, metrik per kelompok, 3 grafik Mermaid (KV-cache, parameter, data latih), template tabel hasil R1–R2 & daftar 6 grafik hasil.
+- **2026-10-09 · Diskusi #17**: Ken menyetujui D15 (semua training di TPU) dan target jurnal Scopus & SINTA (D19). Rekomendasi: vocab 16k + ablation di S25 (D20), 350M sebagai stretch goal bersyarat (D21), metrik inti vs pelengkap + cek kontaminasi (D22).
 
 ---
 
