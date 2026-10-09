@@ -1,7 +1,7 @@
 # KONSEP PENELITIAN — SLM Efisien untuk Bahasa Indonesia
 
 > **Dokumen hidup.** Ini satu-satunya sumber konsep penelitian. Claude memperbaruinya setiap selesai diskusi.
-> Versi: **v2.0** · Terakhir diperbarui: **2026-10-09** · Fase: **Konsep final, siap mulai minggu 1**
+> Versi: **v2.1** · Terakhir diperbarui: **2026-10-09** · Fase: **Konsep final, siap mulai minggu 1**
 
 **Penanda status** (dipakai di seluruh dokumen):
 - ✅ **Disepakati**: sudah diputuskan Ken
@@ -454,19 +454,38 @@ Ya, bagian hasil membandingkan model kita dengan model lain dalam **tiga kelompo
 
 ### Metrik pembanding per kelompok
 
-| Metrik | G1 Internal | G2 Eksternal | Satuan | Lebih baik |
+| Metrik                                             | G1 Internal | G2 Eksternal                         | Satuan          | Lebih baik               |
+| -------------------------------------------------- | ----------- | ------------------------------------ | --------------- | ------------------------ |
+| bpb FLORES-200 `ind_Latn` devtest                  | ✅           | ✅ (metrik utama G2)                  | bit/byte        | ↓                        |
+| bpb held-out web (FineWeb-2/CulturaX)              | ✅           | ✅                                    | bit/byte        | ↓                        |
+| bpb Wikipedia ID                                   | ✅           | ⚠️ kecuali E2 (dilatih di Wikipedia) | bit/byte        | ↓                        |
+| Akurasi MQAR                                       | ✅           | – (tugas sintetis, dilatih sendiri)  | %               | ↑                        |
+| Akurasi passkey/needle 1k–8k                       | ✅           | ✅ (s.d. 1k untuk E1–E3)              | %               | ↑                        |
+| SmSA macro-F1 (fine-tune singkat, anggaran sama)   | ✅           | ✅                                    | %               | ↑                        |
+| Compute untuk mencapai bpb target                  | ✅           | –                                    | FLOPs / TPU-jam | ↓                        |
+| KV-cache per 1.000 token & memori puncak inferensi | ✅           | ✅                                    | MB              | ↓                        |
+| Latensi decode CPU laptop 5500U (batch 1)          | ✅           | ✅                                    | ms/token        | ↓                        |
+| Throughput inferensi CPU & T4                      | ✅           | ✅                                    | token/detik     | ↑                        |
+| Parameter total & non-embedding                    | ✅           | ✅                                    | juta            | ↓ (pada kualitas setara) |
+
+### Penjelasan tiap metrik
+
+| Metrik | Fungsi (menjawab pertanyaan apa) | Satuan | Lebih baik | Contoh membaca angka |
 |---|---|---|---|---|
-| bpb FLORES-200 `ind_Latn` devtest | ✅ | ✅ (metrik utama G2) | bit/byte | ↓ |
-| bpb held-out web (FineWeb-2/CulturaX) | ✅ | ✅ | bit/byte | ↓ |
-| bpb Wikipedia ID | ✅ | ⚠️ kecuali E2 (dilatih di Wikipedia) | bit/byte | ↓ |
-| Akurasi MQAR | ✅ | – (tugas sintetis, dilatih sendiri) | % | ↑ |
-| Akurasi passkey/needle 1k–8k | ✅ | ✅ (s.d. 1k untuk E1–E3) | % | ↑ |
-| SmSA macro-F1 (fine-tune singkat, anggaran sama) | ✅ | ✅ | % | ↑ |
-| Compute untuk mencapai bpb target | ✅ | – | FLOPs / TPU-jam | ↓ |
-| KV-cache per 1.000 token & memori puncak inferensi | ✅ | ✅ | MB | ↓ |
-| Latensi decode CPU laptop 5500U (batch 1) | ✅ | ✅ | ms/token | ↓ |
-| Throughput inferensi CPU & T4 | ✅ | ✅ | token/detik | ↑ |
-| Parameter total & non-embedding | ✅ | ✅ | juta | ↓ (pada kualitas setara) |
+| **bpb FLORES-200** | Seberapa baik model **memprediksi teks Indonesia** standar yang juga dipakai Goldfish → perbandingan langsung dengan model lain | bit per byte | **Kecil** ↓ | 1,0 bpb = rata-rata butuh 1 bit untuk menebak tiap byte teks; 0,9 lebih baik dari 1,0 |
+| **bpb web held-out** | Kualitas prediksi pada teks internet umum yang **tidak pernah dilihat** saat training (generalisasi) | bit per byte | **Kecil** ↓ | Selisih 0,02 bpb antar model sudah bermakna bila konsisten di 3 seed |
+| **bpb Wikipedia ID** | Kualitas pada teks formal/ensiklopedis | bit per byte | **Kecil** ↓ | Tidak adil untuk E2 karena E2 dilatih di Wikipedia (sudah "pernah melihat") |
+| **Akurasi MQAR** | Kemampuan **mengingat** pasangan informasi dari konteks (mis. "A→5, B→9 … A→?"). Titik lemah utama linear attention | % benar | **Besar** ↑ | Transformer biasanya ~100%; linear murni bisa turun jauh saat pasangan banyak |
+| **Akurasi passkey/needle** | Bisakah model **menemukan satu fakta** (kode/angka) yang disisipkan dalam teks panjang 1k–8k token | % benar | **Besar** ↑ | 100% di 1k tapi 40% di 8k = ingatan melemah di konteks panjang |
+| **SmSA macro-F1** | Kemampuan pada **tugas nyata** (klasifikasi sentimen ulasan: positif/negatif/netral) setelah fine-tune singkat | % (0–100) | **Besar** ↑ | Macro-F1 merata-ratakan F1 tiap kelas → adil walau kelas tidak seimbang |
+| **Compute ke bpb target** | **Efisiensi training** (prioritas #1): berapa biaya sampai model mencapai kualitas tertentu | FLOPs atau TPU-jam | **Kecil** ↓ | Model A capai 1,1 bpb dalam 0,8 jam vs B 1,0 jam → A 20% lebih hemat |
+| **KV-cache per 1.000 token** | **Memori tambahan** yang dibutuhkan untuk setiap 1.000 token konteks saat generate (prioritas #2) | MB | **Kecil** ↓ | 36,9 MB vs 3,1 MB → konteks 8k butuh ±295 MB vs ±25 MB |
+| **Memori puncak inferensi** | Total RAM maksimum saat model berjalan (bobot + cache + buffer) → muat di perangkat apa | MB / GB | **Kecil** ↓ | < 500 MB = nyaman di laptop/HP kelas menengah |
+| **Latensi decode CPU (batch 1)** | Seberapa **cepat terasa** bagi satu pengguna di laptop biasa: waktu untuk menghasilkan 1 token | ms/token | **Kecil** ↓ | 20 ms/token = ±50 token/detik (lebih cepat dari orang membaca) |
+| **Throughput CPU & T4** | **Kapasitas** total: berapa token dihasilkan per detik bila melayani banyak permintaan sekaligus | token/detik | **Besar** ↑ | Penting untuk server; latensi penting untuk pengguna tunggal |
+| **Parameter total & non-embedding** | **Ukuran model** (prioritas #3): total menentukan ukuran file & RAM; non-embedding untuk membandingkan "otak" arsitektur secara adil | juta (M) | **Kecil** ↓, *tetapi hanya bermakna bila kualitasnya setara* | Model 97M dengan bpb sama seperti model 124M = lebih efisien |
+
+**Cara membaca bersama:** tidak ada satu metrik yang menentukan pemenang. Klaim utama kita berbentuk *"kualitas (bpb, MQAR, SmSA) setara dengan Transformer, tetapi compute, KV-cache, dan latensi lebih kecil"*. Karena itu hasil disajikan sebagai **frontier** (mis. grafik bpb vs KV-cache), bukan satu angka.
 
 ### Grafik data pembanding (dari spesifikasi, bukan hasil eksperimen)
 
@@ -603,6 +622,7 @@ Format: tanggal — topik — hasil — keputusan — langkah berikutnya
 - **2026-10-09 · Diskusi #16**: Ditambahkan §10C rencana perbandingan hasil: 3 kelompok (G1 internal compute-matched, G2 IndoGPT/GPT-2 Indo/Goldfish, G3 literatur), tabel data 8 model, metrik per kelompok, 3 grafik Mermaid (KV-cache, parameter, data latih), template tabel hasil R1–R2 & daftar 6 grafik hasil.
 - **2026-10-09 · Diskusi #17**: Ken menyetujui D15 (semua training di TPU) dan target jurnal Scopus & SINTA (D19). Rekomendasi: vocab 16k + ablation di S25 (D20), 350M sebagai stretch goal bersyarat (D21), metrik inti vs pelengkap + cek kontaminasi (D22).
 - **2026-10-09 · Diskusi #18**: Ken menolak jangkar 350M (D21 ❌) dan menyetujui sisanya: vocab 16k + ablation di S25 (D20 ✅), metrik inti vs pelengkap (D22 ✅), metrik/pembanding §10A–§10C (D17, D18 ✅). **Konsep dinyatakan final (v2.0)**. Berikutnya: minggu 1.
+- **2026-10-09 · Diskusi #19**: Ditambahkan penjelasan tiap metrik (fungsi, satuan, arah lebih baik, contoh) di §10C.
 
 ---
 
