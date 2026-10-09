@@ -1,7 +1,7 @@
 # KONSEP PENELITIAN — SLM Efisien untuk Bahasa Indonesia
 
 > **Dokumen hidup.** Ini satu-satunya sumber konsep penelitian. Claude memperbaruinya setiap selesai diskusi.
-> Versi: **v1.3** · Terakhir diperbarui: **2026-10-09** · Fase: **Penyusunan konsep**
+> Versi: **v1.4** · Terakhir diperbarui: **2026-10-09** · Fase: **Penyusunan konsep**
 
 **Penanda status** (dipakai di seluruh dokumen):
 - ✅ **Disepakati**: sudah diputuskan Ken
@@ -45,6 +45,8 @@ Membangun **small language model (SLM) bahasa Indonesia** yang efisien, dengan m
 | **Embedding** | Tabel yang mengubah token menjadi vektor angka. Ukurannya vocab × d_model; di-*tie* = tabel yang sama dipakai lagi di output | 16.000 × 768 ≈ 12,3M parameter |
 | **Non-embedding (backbone)** | Semua parameter selain embedding: layer attention/linear attention, FFN, normalisasi. Inilah "otak" model dan ukuran yang adil untuk membandingkan arsitektur | S125: ±85M non-embedding |
 | **Panjang token** | Rata-rata jumlah karakter yang diwakili satu token. Makin panjang, makin sedikit token per teks dan makin hemat compute | Target ±4–5 karakter/token untuk teks Indonesia 🔍 |
+| **Pretraining** | Tahap pertama melatih LM **dari bobot acak** pada teks mentah dalam jumlah besar (tugas: menebak token berikutnya). Bukan berarti memakai model yang sudah dilatih orang lain. Lawan katanya *fine-tuning* (melatih lanjut model yang sudah ada) | Kita melakukan pretraining S10–S125 dari nol; fine-tuning hanya untuk uji SmSA |
+| **Pretrained model** | Model yang sudah selesai di-pretraining (milik orang lain atau milik kita sendiri) | IndoGPT, Goldfish = pretrained model orang lain yang hanya kita **evaluasi** sebagai pembanding |
 
 ---
 
@@ -311,14 +313,14 @@ Catatan umum: klaim arsitektur butuh ≥2–3 skala; 20 token/parameter hanya pa
 
 | Peran | Dataset | Status |
 |---|---|---|
-| Pretraining | FineWeb-2 `ind_Latn` atau CulturaX `id` (subset 0,5–2B token) | 🟡 pilih setelah cek kualitas |
+| **Data latih utama** (*pretraining* = proses melatih model **dari nol**, bukan memakai model jadi) | FineWeb-2 `ind_Latn` atau CulturaX `id` (subset 0,5–2B token) | 🟡 pilih setelah cek kualitas |
 | Evaluasi held-out | Wikipedia ID (dipisah dari data latih, cek duplikasi) | 🟡 |
 | Recall sintetis | MQAR (dibangkitkan sendiri) | 🟡 |
 | Downstream ringan | Satu tugas IndoNLU (mis. SmSA sentimen) via fine-tune singkat | 🟡 |
 | Referensi eksternal | Goldfish `ind_latn` (≤125M; bandingkan via bpb) | 🟡 |
 | Evaluasi pembanding | FLORES-200 `ind_Latn` (dipakai Goldfish → perbandingan langsung) | 🟡 |
 
-**Tokenizer:** SentencePiece (BPE/Unigram + byte-fallback), dilatih di laptop dari ~1 GB teks Indonesia. Vocab yang dibandingkan: 8k / 16k / 32k. ❓
+**Tokenizer:** SentencePiece (BPE/Unigram + byte-fallback), dilatih sendiri dari nol di sesi CPU Kaggle/TPU-VM (bukan laptop, sesuai D14) dari ~1 GB teks Indonesia. Vocab yang dibandingkan: 8k / 16k / 32k. ❓
 
 ---
 
@@ -482,6 +484,7 @@ Format: tanggal — topik — hasil — keputusan — langkah berikutnya
 - **2026-10-09 · Diskusi #12**: Ken menyetujui N1+N2 (D8 ✅), fokus TPU (D10 ✅), belajar JAX sambil jalan (D13 ✅), laptop untuk pengujian inferensi (D14 ✅), TRC sebagai opsi (D16). Pertanyaan S10/S25 di GPU + S125 di TPU: bisa tapi tidak disarankan (tren skala tercampur efek hardware, dua jalur kode) → usulan D15. Ditambahkan penjelasan arah A/B, rasio, vocab & non-embedding; studi setara (2510.04800, Based, Zoology, CLA, Hymba, HALO) & pembanding Indonesia (IndoGPT 117M backbone sama dengan S125, GPT-2 Indonesia, Goldfish); §10A metrik & §10B pembanding. Folder dijadikan repo git lokal.
 - **2026-10-09 · Diskusi #13**: Dibuat folder `papers/` (wajib/penting/pendukung) dengan `DAFTAR-BACA.md` (19 paper, prioritas & fokus baca) dan skrip `unduh_paper.ps1`.
 - **2026-10-09 · Diskusi #14**: Ditambahkan 9 paper model/benchmark Indonesia (IndoNLG, Goldfish, IndoNLU, IndoLEM, Cendol, Sailor, SEA-LION, IndoMMLU, NusaCrowd) ke `papers/DAFTAR-BACA.md` (folder `papers/indonesia/`). PDF W2, W3, I1 sudah diunduh; sisanya lewat `unduh_paper.ps1`.
+- **2026-10-09 · Diskusi #15**: Klarifikasi istilah: "pretraining" di §9 = proses melatih model kita dari nol, bukan memakai model jadi. Ditambahkan ke glosarium; tokenizer dilatih di CPU Kaggle/TPU-VM, bukan laptop.
 
 ---
 
