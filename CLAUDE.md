@@ -23,7 +23,8 @@ Penelitian **mandiri** untuk mengembangkan **arsitektur terbaru untuk language m
 - Riset mandiri sebelumnya memakai repo GitHub pribadi (`rexxar280903/...`) dan notebook/Kaggle; kemungkinan sumber daya komputasi terbatas (asumsikan GPU tunggal/Kaggle/Colab sampai dikonfirmasi).
 
 ## 4. Status Saat Ini
-- **Fase:** Konsep **final** (KONSEP.md v2.0, 2026-10-09). Berikutnya minggu 1: belajar dasar JAX, uji kelayakan TPU (S10 end-to-end), siapkan data & tokenizer 16k, baca paper W1.
+- **Repo GitHub:** https://github.com/rexxar280903/SLM-INDO (branch `main`); PDF referensi, data, dan checkpoint tetap disimpan lokal sesuai `.gitignore`.
+- **Fase:** Konsep **final** (KONSEP.md v2.2, 2026-10-09); draf paper HTML berbahasa Indonesia v0.1 tersedia di `manuscript/paper-slm-indonesia.html`. Belum ada hasil eksperimen. Berikutnya minggu 1: belajar dasar JAX, uji kelayakan TPU (S10 end-to-end), siapkan data & tokenizer 16k, lengkapi pembacaan paper W1 dan keputusan operasional pada lampiran draf.
 - **Arah yang ditetapkan Ken:** LM baru yang menekankan **efisiensi**, dengan **biaya sangat terbatas** (riset mandiri).
 - **Konsep aktif:** `KONSEP.md` (dokumen hidup, v1.1) — sumber utama untuk keputusan (§3), literatur & pembanding (§4), RQ, novelty, arsitektur, metrik (§10A), pembanding (§10B), risiko, timeline, log diskusi.
 - **Prioritas efisiensi:** compute training > memori > parameter.
@@ -76,6 +77,8 @@ Buat folder hanya saat dibutuhkan.
 ## 9. Log Perkembangan
 Format: `YYYY-MM-DD — ringkasan | hasil/angka | keputusan | langkah berikutnya`
 
+- **2026-10-10** — Penyiapan publikasi proyek ke repo GitHub `rexxar280903/SLM-INDO`, branch `main`, dengan seluruh riwayat Git lokal dan draf paper terbaru. | Repo tujuan kosong saat diperiksa; file PDF referensi dikecualikan sesuai `.gitignore`. | Repo ini menjadi tujuan sinkronisasi proyek. | Berikutnya: lanjutkan pilot implementasi dan pembacaan paper.
+- **2026-10-09** — Dibuat draf paper HTML Indonesia v0.1 dari KONSEP.md v2.2, untuk pengembangan artikel jurnal: abstrak, pendahuluan, penelitian terkait, metodologi, protokol eksperimen, template hasil, pembahasan, kesimpulan sementara, dan audit sumber. | 4 figure CSS, 10 persamaan, 10 tabel, 28 entri sumber; W1 diverifikasi terbatas melalui abstrak terindeks, bukan teks penuh. Koreksi di draf: FLOPs-matched berbeda dari token-matched, rasio nominal vs aktual, parameter S125 masih estimasi, konteks Goldfish 512, Gated DeltaNet ICLR 2025, Goldfish LREC 2026. | Tidak mengubah keputusan KONSEP.md; rincian operasional tambahan ditandai sebagai usulan. | Berikutnya: pilot implementasi, lengkapi tinjauan novelty dan hyperparameter, isi hasil hanya dari eksperimen.
 - **2026-10-09** — Konsep final (KONSEP.md v2.0): semua keputusan D1–D22 terjawab; 350M dibatalkan. | Berikutnya: minggu 1.
 - **2026-10-09** — Ken setujui N1+N2, TPU sebagai mesin utama, JAX, laptop untuk inferensi. KONSEP.md v1.1: penjelasan A/B, rasio, vocab; studi setara & pembanding Indonesia (IndoGPT dkk.); §10A metrik, §10B pembanding. Folder dijadikan repo git lokal. | Berikutnya: Ken jawab KONSEP.md §13; mulai minggu 1 (belajar JAX, uji kelayakan TPU, baca paper Training-time Selection).
 - **2026-10-08** — Skala final: 10M/25M/50M/kelas 125M (opsi A), KONSEP.md v1.0. | Berikutnya: putuskan framework (JAX?), N1+N2, jangkar 350M.
