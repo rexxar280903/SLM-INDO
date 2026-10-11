@@ -124,18 +124,35 @@ a{color:var(--accent)}pre{margin:0;padding:14px;background:var(--paper);border:1
 .chart-panel{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:18px;display:grid;gap:12px;min-width:0}.chart-panel h3{font-size:17px}.chart-panel p{font-size:12px}.bar-row{display:grid;grid-template-columns:108px 1fr 66px;gap:8px;align-items:center;font-size:12px}.bar-track{height:19px;background:var(--paper);border:1px solid var(--line);border-radius:3px;overflow:hidden}.bar-fill{height:100%;background:var(--accent)}.bar-row.internal .bar-fill{background:var(--gdn)}.bar-row.empty .bar-track{border-style:dashed;background:transparent}.bar-value{text-align:right;font:11px var(--f-mono)}.axis-note{font:11px var(--f-mono);color:var(--muted)}
 .definition-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0}.definition-list div{border:1px solid var(--line);border-radius:8px;padding:12px;background:var(--panel)}.definition-list dt{font-weight:bold;color:var(--accent)}.definition-list dd{margin:5px 0 0;font-size:13px}.definition-list[hidden]{display:none}#glossary-search{font:inherit;padding:10px;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:7px;width:100%}.hypotheses .detail{gap:6px}
 @media(max-width:700px){.data-grid,.model-grid,.chart-grid,.hypotheses,.definition-list{grid-template-columns:1fr}.bar-row{grid-template-columns:90px 1fr 62px}.wrap{padding-inline:14px}.phase,.gate-row{grid-template-columns:40px 1fr;gap:9px}.num{width:40px}.phase::before,.gate-row::before{left:19px}.card{padding:12px}.blk{grid-template-columns:32px 1fr;gap:5px}.blk .tag{grid-column:2}.n2 .mini{gap:2px}}
-@media print{#term-tooltip,.controls,.search-label,#glossary-search{display:none!important}.model-card,.detail,.chart-panel{break-inside:avoid}.term{border:0}.wrap{max-width:none}.data-grid,.model-grid,.chart-grid{grid-template-columns:1fr}.definition-list{grid-template-columns:1fr}body{font-size:12px}}
+/* Penjelajah baseline: skala, pembagian head, cache, dan checkpoint tetap tersinkron. */
+.baseline-lab{display:grid;gap:16px;padding:20px;border:1px solid var(--line);border-radius:12px;background:var(--panel);min-width:0;scroll-margin-top:20px}
+.baseline-matrix{display:grid;grid-template-columns:minmax(50px,.5fr) repeat(2,minmax(0,1fr));gap:8px;align-items:center}
+.baseline-matrix>span{font-size:13px}.baseline-choice{font:13px var(--f-mono);padding:10px 6px;min-height:44px;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:6px;cursor:pointer;overflow-wrap:anywhere}
+.baseline-choice[aria-pressed="true"]{background:var(--accent);color:var(--panel);border-color:var(--accent)}
+.baseline-choice:focus-visible,.baseline-lab select:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.baseline-settings{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:end}.baseline-settings label{display:grid;gap:5px;font-size:13px;min-width:0}.baseline-settings select{max-width:100%}
+.baseline-summary{font-size:14px;padding:10px 0;border-block:1px solid var(--line);overflow-wrap:anywhere}
+.baseline-compare,.baseline-training{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}.baseline-panel{display:grid;gap:10px;align-content:start;min-width:0}
+.baseline-panel h4{font:700 16px var(--f-display);margin:0}.baseline-panel[data-selected="true"] h4::after{content:' · dipilih';color:var(--accent);font-size:12px}
+.baseline-flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px}.baseline-layer{padding:10px 0;border-block:1px solid var(--line)}
+.baseline-heads{display:block;width:100%;overflow:visible}.baseline-heads text{fill:var(--ink);font:12px var(--f-mono)}.baseline-heads .query-node{fill:var(--ffn-bg)}.baseline-heads .kv-node{fill:var(--attn-bg)}.baseline-heads path{stroke:var(--muted);opacity:.55;stroke-width:1.5;fill:none}
+.baseline-memory{display:grid;gap:10px}.baseline-memory-row{display:grid;grid-template-columns:42px minmax(0,1fr) 120px;gap:8px;align-items:center;font-size:13px}.baseline-track{height:18px;background:var(--paper)}.baseline-fill{height:100%;background:var(--attn);transition:width .25s ease}.baseline-memory-value{text-align:right;font:12px var(--f-mono)}
+.baseline-training{padding-top:12px;border-top:1px solid var(--line)}.baseline-training>div{display:grid;gap:6px;min-width:0}.baseline-checkpoint{color:var(--accent);overflow-wrap:anywhere;font-weight:bold}
+.baseline-totals{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;font-size:14px}
+@media(max-width:700px){.baseline-compare,.baseline-training{grid-template-columns:1fr}.baseline-lab{padding:14px}.baseline-memory-row{grid-template-columns:38px minmax(0,1fr) 100px}.baseline-memory-value{font-size:11px}}
+@media(prefers-reduced-motion:reduce){.baseline-fill{transition:none}}
+@media print{#term-tooltip,.controls,.search-label,#glossary-search,.baseline-settings{display:none!important}.model-card,.detail,.chart-panel{break-inside:avoid}.term{border:0}.wrap{max-width:none}.data-grid,.model-grid,.chart-grid{grid-template-columns:1fr}.definition-list{grid-template-columns:1fr}body{font-size:12px}}
 </style>
 </head>
 <body>
 
 <div class="wrap">
 <header>
-  <span class="eyebrow">Riset SLM · KONSEP.md v2.2 · diperbarui 10 Oktober 2026 · belum ada hasil</span>
+  <span class="eyebrow">Riset SLM · KONSEP.md v2.2 · diperbarui 11 Oktober 2026 · belum ada hasil</span>
   <h1>Peta Alur Training &amp; Arsitektur SLM Indonesia</h1>
   <p>Dari teks mentah ke model bahasa Indonesia. Jelajahi bentuk data, bagian dalam model pembanding, dan metode N2. Arsitektur final OURS menunggu hasil eksperimen.</p>
   <p class="note">Kata bergaris titik memiliki penjelasan: arahkan kursor atau fokuskan dengan Tab. Pada layar sentuh, ketuk kata tersebut. Kotak hilang saat kursor keluar, fokus berpindah, atau Escape ditekan.</p>
-  <nav><a href="#alur">1 · Peta alur</a><a href="#data">2 · Contoh data</a><a href="#run">3 · Satu run</a><a href="#pembanding">4 · Semua model</a><a href="#arsitektur">5 · Kandidat hybrid</a><a href="#n2">6 · N2 &amp; hipotesis</a><a href="#grafik">7 · Grafik</a><a href="#skala">8 · Skala</a><a href="#glosarium">9 · Kamus istilah</a></nav>
+  <nav><a href="#alur">1 · Peta alur</a><a href="#data">2 · Contoh data</a><a href="#run">3 · Satu run</a><a href="#pembanding">4 · Semua model</a><a href="#baseline-lab">4a · MHA vs GQA interaktif</a><a href="#arsitektur">5 · Kandidat hybrid</a><a href="#n2">6 · N2 &amp; hipotesis</a><a href="#grafik">7 · Grafik</a><a href="#skala">8 · Skala</a><a href="#glosarium">9 · Kamus istilah</a></nav>
 </header>
 
 <!-- ============ 1. PETA ALUR ============ -->
@@ -291,9 +308,47 @@ Toko buka pukul sembilan pagi.	neutral</code></pre>
 <section id="pembanding">
   <span class="eyebrow">Arsitektur dalam CSS · layer, head, kanal, dan proyeksi</span>
   <h2>Bagian dalam semua model pembanding</h2>
-  <p>Diagram dibaca dari atas ke bawah. B0–B3 adalah pembanding yang akan dilatih sendiri; E1–E3 adalah checkpoint eksternal. Setiap baris layer dan lingkaran head digambar dengan CSS. Angka menyatakan dimensi sebenarnya pada konfigurasi yang ditampilkan; titik neuron hanya ringkasan visual.</p>
+  <p>Diagram dibaca dari atas ke bawah. B0–B3 adalah pembanding yang akan dilatih sendiri; E1–E3 adalah checkpoint eksternal. Penjelajah di bawah memperlihatkan pembagian head dengan garis penghubung. Angka internal adalah contoh konfigurasi rancangan, bukan konfigurasi final; titik neuron hanya ringkasan visual.</p>
   <div class="controls"><label for="scale-select">Skala diagram internal</label><select id="scale-select"><option value="S10">S10 · 256 × 8</option><option value="S25">S25 · 384 × 10</option><option value="S50">S50 · 512 × 14</option><option value="S125" selected>S125 · 768 × 12</option></select><span class="note">Model eksternal tetap memakai konfigurasi checkpoint.</span></div>
   <p class="note" id="scale-note"></p>
+  <article class="baseline-lab" id="baseline-lab" data-no-terms aria-labelledby="baseline-lab-title">
+    <div class="card-head"><h3 id="baseline-lab-title">Dua baseline × empat skala</h3><span class="status">Rancangan eksperimen · belum dilatih</span></div>
+    <p class="note">Pilih satu pasangan untuk menyorot baseline dan mengubah skala seluruh diagram internal. B0 dan B1 sama-sama Transformer; B1 berbagi K/V dalam kelompok query.</p>
+    <div class="baseline-matrix" role="group" aria-label="Pilih baseline dan skala model">
+      <span>Skala</span><span>B0 · MHA</span><span>B1 · GQA</span>
+      <span>S10</span><button type="button" class="baseline-choice" data-scale="S10" data-baseline="B0" aria-pressed="false">B0–S10</button><button type="button" class="baseline-choice" data-scale="S10" data-baseline="B1" aria-pressed="false">B1–S10</button>
+      <span>S25</span><button type="button" class="baseline-choice" data-scale="S25" data-baseline="B0" aria-pressed="false">B0–S25</button><button type="button" class="baseline-choice" data-scale="S25" data-baseline="B1" aria-pressed="false">B1–S25</button>
+      <span>S50</span><button type="button" class="baseline-choice" data-scale="S50" data-baseline="B0" aria-pressed="false">B0–S50</button><button type="button" class="baseline-choice" data-scale="S50" data-baseline="B1" aria-pressed="false">B1–S50</button>
+      <span>S125</span><button type="button" class="baseline-choice" data-scale="S125" data-baseline="B0" aria-pressed="false">B0–S125</button><button type="button" class="baseline-choice" data-scale="S125" data-baseline="B1" aria-pressed="true">B1–S125</button>
+    </div>
+    <p class="note">Skala = kelas ukuran parameter. S125 tidak menjamin tepat 125 juta parameter. Jumlah query head mengikuti contoh tiap skala: 4 / 6 / 8 / 12.</p>
+    <div class="baseline-settings">
+      <label for="baseline-kv">K/V head pada B1<select id="baseline-kv"><option value="4">4 K/V head</option></select></label>
+      <label for="baseline-context">Token konteks untuk hitungan cache<select id="baseline-context"><option value="512">512 token</option><option value="1024">1.024 token</option><option value="2048" selected>2.048 token</option><option value="4096">4.096 token</option><option value="8192">8.192 token</option></select></label>
+      <label for="baseline-seeds">Pengulangan setiap konfigurasi<select id="baseline-seeds"><option value="1">1 seed</option><option value="3">3 seed</option></select></label>
+    </div>
+    <div id="baseline-summary" class="baseline-summary" aria-live="polite" aria-atomic="true"></div>
+    <div class="baseline-compare">
+      <div class="baseline-panel" id="baseline-panel-B0"><h4 id="baseline-title-B0">B0–S125 · MHA</h4><div class="baseline-flow"><span>Token</span><span aria-hidden="true">→</span><span>Embedding</span><span aria-hidden="true">→</span><span id="baseline-layers-B0">12 blok</span><span aria-hidden="true">→</span><span>Prediksi</span></div><div class="baseline-layer"><b>Full attention · K/V sendiri</b><svg id="baseline-svg-B0" class="baseline-heads" role="img" aria-label="Pembagian query dan K/V pada MHA"></svg><span class="note">Attention + FFN di setiap blok</span></div><p id="baseline-count-B0" class="note"></p></div>
+      <div class="baseline-panel" id="baseline-panel-B1"><h4 id="baseline-title-B1">B1–S125 · GQA</h4><div class="baseline-flow"><span>Token</span><span aria-hidden="true">→</span><span>Embedding</span><span aria-hidden="true">→</span><span id="baseline-layers-B1">12 blok</span><span aria-hidden="true">→</span><span>Prediksi</span></div><div class="baseline-layer"><b id="baseline-sharing">Full attention · K/V dibagi dalam kelompok</b><svg id="baseline-svg-B1" class="baseline-heads" role="img" aria-label="Pembagian query dan K/V pada GQA"></svg><span class="note">Attention + FFN di setiap blok</span></div><p id="baseline-count-B1" class="note"></p></div>
+    </div>
+    <p class="note">Q = Query, pencari kecocokan · K = Key, yang dibandingkan dengan Query · V = Value, informasi yang digabung. Garis menunjukkan head K/V yang dipakai tiap query, bukan urutan token.</p>
+    <h3>KV-cache saat menghasilkan teks</h3>
+    <div id="baseline-memory" class="baseline-memory" role="img" aria-label="Perbandingan analitik KV-cache">
+      <div class="baseline-memory-row"><span>MHA</span><div class="baseline-track"><div class="baseline-fill" style="width:100%"></div></div><span class="baseline-memory-value" id="baseline-memory-B0"></span></div>
+      <div class="baseline-memory-row"><span>GQA</span><div class="baseline-track"><div class="baseline-fill" id="baseline-memory-fill" style="width:33.333%"></div></div><span class="baseline-memory-value" id="baseline-memory-B1"></span></div>
+    </div>
+    <p class="note" id="baseline-memory-detail" aria-live="polite"></p>
+    <p class="note">Hitungan analitik dengan batch 1, 64 kanal/head dan 2 byte/elemen. Layer, konteks, dan presisi sama. Ini hanya KV-cache, bukan total memori model atau jaminan dukungan konteks panjang. MB = 1.000.000 byte.</p>
+    <h3>Training terpisah → checkpoint terpisah</h3>
+    <div class="baseline-training">
+      <div><span class="baseline-flow"><b id="baseline-run-B0"></b><span aria-hidden="true">→</span><span>Training</span><span aria-hidden="true">→</span></span><span class="baseline-checkpoint" id="baseline-checkpoint-B0"></span></div>
+      <div><span class="baseline-flow"><b id="baseline-run-B1"></b><span aria-hidden="true">→</span><span>Training</span><span aria-hidden="true">→</span></span><span class="baseline-checkpoint" id="baseline-checkpoint-B1"></span></div>
+    </div>
+    <p class="note">Checkpoint adalah berkas bobot hasil training. Kedua baseline dilatih sendiri dengan kontrol eksperimen yang ditetapkan; penghematan memori dan kualitas tetap perlu diuji.</p>
+    <div id="baseline-totals" class="baseline-totals" aria-live="polite" aria-atomic="true"></div>
+    <p class="note">Ilustrasi matriks lengkap B0/B1: 4 skala × 2 baseline, dengan satu pilihan K/V per skala. Jika beberapa pilihan K/V benar-benar dilatih, jumlah konfigurasi bertambah. Seed mengubah inisialisasi acak, bukan arsitektur. Belum termasuk B2/B3, hybrid usulan, pencarian pengaturan training, atau run gagal; cakupan final mengikuti anggaran.</p>
+  </article>
   <div class="legend"><span class="chip" style="color:var(--attn)">A · softmax attention</span><span class="chip" style="color:var(--gdn)">G · Gated DeltaNet</span><span class="chip" style="color:var(--ffn)">F · FFN di setiap layer</span></div>
   <noscript><p>Aktifkan JavaScript untuk diagram pembanding, grafik, dan tooltip. Detail kandidat hybrid serta contoh data tetap tersedia di bawah.</p></noscript>
   <div id="internal-models" class="model-grid"></div>
@@ -572,6 +627,56 @@ const dims = {
  S50:{d:512,l:14,h:8,kv:4,f:1408,c:'2048'},
  S125:{d:768,l:12,h:12,kv:4,f:2048,c:'2048'}
 };
+// Pilihan visualisasi saja; tidak mengubah konfigurasi training penelitian.
+const baselineState={selected:'B1',context:2048,seeds:1,kvByScale:{}};
+const baselineScale=()=>document.getElementById('scale-select').value;
+const baselineKV=()=>baselineState.kvByScale[baselineScale()]??dims[baselineScale()].kv;
+const baselineElement=id=>document.getElementById('baseline-'+id);
+function drawBaselineHeads(id,queryHeads,kvHeads){
+ const svg=baselineElement('svg-'+id),width=Math.max(240,svg.parentElement.clientWidth),height=queryHeads*27+52;
+ const qx=8,qWidth=46,kvWidth=82,kvX=width-kvWidth-8,yStart=38,groupSize=queryHeads/kvHeads;
+ let markup=`<title>${id==='B0'?'MHA':'GQA'}: ${queryHeads} query head dan ${kvHeads} K/V head</title><desc>Setiap ${groupSize} query memakai satu pasangan Key dan Value head. Garis menunjukkan pembagian head.</desc><text x="${qx}" y="20">Query</text><text x="${kvX}" y="20">Key / Value</text>`;
+ for(let i=0;i<queryHeads;i++){
+  const y=yStart+i*27,g=Math.floor(i/groupSize),targetY=yStart+(g*groupSize+(groupSize-1)/2)*27+11;
+  markup+=`<path d="M${qx+qWidth},${y+11} C${qx+qWidth+32},${y+11} ${kvX-32},${targetY} ${kvX},${targetY}"/><rect class="query-node" x="${qx}" y="${y}" width="${qWidth}" height="22" rx="3"/><text x="${qx+qWidth/2}" y="${y+15}" text-anchor="middle">Q${i+1}</text>`;
+ }
+ for(let g=0;g<kvHeads;g++){
+  const y=yStart+(g*groupSize+(groupSize-1)/2)*27;
+  markup+=`<rect class="kv-node" x="${kvX}" y="${y}" width="${kvWidth}" height="22" rx="3"/><text x="${kvX+kvWidth/2}" y="${y+15}" text-anchor="middle">K${g+1} / V${g+1}</text>`;
+ }
+ svg.setAttribute('viewBox',`0 0 ${width} ${height}`);svg.setAttribute('height',height);
+ svg.setAttribute('aria-label',`${queryHeads} query head memakai ${kvHeads} pasangan Key dan Value head; ${groupSize} query per pasangan.`);
+ svg.innerHTML=markup;
+}
+function renderBaselineLab(){
+ const scale=baselineScale(),s=dims[scale],kv=baselineKV(),ratio=kv/s.h,percent=100*ratio;
+ const number=n=>n.toLocaleString('id-ID',{maximumFractionDigits:2});
+ document.querySelectorAll('.baseline-choice').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.scale===scale&&button.dataset.baseline===baselineState.selected)));
+ const choices=Array.from({length:s.h-1},(_,i)=>i+2).filter(n=>s.h%n===0);
+ baselineElement('kv').innerHTML=choices.map(n=>`<option value="${n}">${n} K/V head${n===s.h?' · batas MHA':''}</option>`).join('');
+ baselineElement('kv').value=String(kv);
+ baselineElement('context').value=String(baselineState.context);baselineElement('seeds').value=String(baselineState.seeds);
+ ['B0','B1'].forEach(id=>{
+  baselineElement('title-'+id).textContent=`${id}–${scale} · ${id==='B0'?'MHA':'GQA'}`;
+  baselineElement('panel-'+id).dataset.selected=String(baselineState.selected===id);
+  baselineElement('layers-'+id).textContent=`${s.l} blok`;
+  baselineElement('run-'+id).textContent=`${id}–${scale}`;
+  baselineElement('checkpoint-'+id).textContent=baselineState.seeds===1?`Bobot ${id}–${scale}`:`3 checkpoint ${id}–${scale} · satu per seed`;
+ });
+ baselineElement('count-B0').textContent=`${s.h} query head · ${s.h} K/V head · K/V sendiri per query`;
+ baselineElement('count-B1').textContent=`${s.h} query head · ${kv} K/V head · ${s.h/kv} query per pasangan K/V`;
+ baselineElement('sharing').textContent=kv===s.h?'Full attention · batas GQA menjadi MHA':'Full attention · K/V dibagi dalam kelompok';
+ const memory=2*s.l*s.h*64*baselineState.context*2/1e6,sharedMemory=memory*ratio;
+ baselineElement('memory-B0').textContent=`${number(memory)} MB · 100%`;
+ baselineElement('memory-B1').textContent=`${number(sharedMemory)} MB · ${number(percent)}%`;
+ baselineElement('memory-fill').style.width=percent+'%';
+ baselineElement('memory').setAttribute('aria-label',`KV-cache MHA ${number(memory)} MB; GQA ${number(sharedMemory)} MB, ${number(percent)} persen dari MHA.`);
+ baselineElement('memory-detail').textContent=`${scale}: ${s.l} blok full attention, ${number(baselineState.context)} token konteks. ${kv===s.h?'Jumlah K/V sama: tidak ada penghematan cache.':`KV-cache GQA ${number(s.h/kv)}× lebih kecil daripada MHA (${number(100-percent)}% lebih sedikit).`}`;
+ baselineElement('summary').textContent=`${baselineState.selected}–${scale} dipilih · Transformer ${baselineState.selected==='B0'?'MHA':'GQA'} · ${s.d} kanal, ${s.l} blok · ${s.h} Q / ${baselineState.selected==='B0'?s.h:kv} KV · bobot dilatih tersendiri.`;
+ baselineElement('totals').innerHTML=`<strong>8 konfigurasi baseline</strong><span>× ${baselineState.seeds} seed = <b>${8*baselineState.seeds} run training</b></span><span>Skala ${scale}: 2 konfigurasi, ${2*baselineState.seeds} run.</span>`;
+ drawBaselineHeads('B0',s.h,s.h);drawBaselineHeads('B1',s.h,kv);
+}
+function refreshBaseline(){hideTooltip();renderInternal();renderBaselineLab();}
 const dots = (n,type='')=>`<span class="head-dots ${type}">${Array.from({length:n},(_,i)=>`<i>${i+1}</i>`).join('')}</span>`;
 const neurons = '<span class="neuron-row" aria-hidden="true">'+ '<i></i>'.repeat(16)+'</span>';
 function modelCard(m){
@@ -603,8 +708,8 @@ function renderInternal(){
   {id:'B2',name:'Pure Gated DeltaNet',kind:'linear',description:'Semua layer linear; memori state tetap terhadap panjang teks.'},
   {id:'B3',name:'Hybrid nominal 3:1 + MHA',kind:'hybrid',description:'Setiap layer ke-4 full attention MHA; layer lain Gated DeltaNet. Rasio aktual mengikuti depth.'}
  ];
- document.getElementById('internal-models').innerHTML=models.map(m=>modelCard({...s,...m,kv:m.kind==='gqa'?s.kv:s.h,v:16000})).join('');
- document.getElementById('scale-note').textContent=`${scale}: hidden/depth mengikuti konsep. Head dimension 64, FFN ${s.f}, dan KV head ${s.kv} pada GQA adalah contoh rancangan untuk visualisasi; perlu dibekukan setelah pilot. Gated DeltaNet memakai head/state ilustratif, bukan config final. Grafik di bawah tetap memakai S125.`;
+ document.getElementById('internal-models').innerHTML=models.map(m=>modelCard({...s,...m,kv:m.kind==='gqa'?baselineKV():s.h,v:16000})).join('');
+ document.getElementById('scale-note').textContent=`${scale}: hidden/depth mengikuti konsep. Head dimension 64, FFN ${s.f}, dan KV head ${baselineKV()} pada GQA adalah contoh rancangan untuk visualisasi; perlu dibekukan setelah pilot. Pilihan K/V tersinkron dengan kartu B1 di bawah. Gated DeltaNet memakai head/state ilustratif, bukan config final. Grafik pada bagian 7 tetap memakai acuan S125, tidak mengikuti kontrol penjelajah.`;
  annotate(document.getElementById('internal-models'));annotate(document.getElementById('scale-note'));
 }
 const externalModels=[
@@ -632,7 +737,7 @@ document.getElementById('hypotheses').innerHTML=definitions.filter(d=>/^H[1-5]$/
 const terms=[...termLookup.keys()].sort((a,b)=>b.length-a.length);
 const termPattern=new RegExp('(?<![\\p{L}\\p{N}_])('+terms.map(t=>t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')(?![\\p{L}\\p{N}_])','giu');
 function annotate(root){
- const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode(node){return node.parentElement?.closest('script,style,pre,code,a,nav,select,option,.term,#term-tooltip,#definitions,.model-source')?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT;}});
+ const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode(node){return node.parentElement?.closest('script,style,pre,code,a,nav,select,option,button,svg,[data-no-terms],.term,#term-tooltip,#definitions,.model-source')?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT;}});
  const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
  for(const node of nodes){const text=node.nodeValue;termPattern.lastIndex=0;const matches=[...text.matchAll(termPattern)];if(!matches.length)continue;const frag=document.createDocumentFragment();let cursor=0;for(const match of matches){frag.append(text.slice(cursor,match.index));const span=document.createElement('span');span.className='term';span.tabIndex=0;span.setAttribute('role','button');span.dataset.definition=termLookup.get(match[0].toLocaleLowerCase('id'));span.setAttribute('aria-label',match[0]+': tampilkan definisi');span.textContent=match[0];frag.append(span);cursor=match.index+match[0].length;}frag.append(text.slice(cursor));node.replaceWith(frag);}
 }
@@ -659,9 +764,16 @@ function renderDefinitions(query=''){
  document.getElementById('glossary-count').textContent=`${filtered.length} dari ${definitions.length} definisi${filtered.length?'':' · tidak ada istilah yang cocok'}.`;
 }
 document.getElementById('glossary-search').addEventListener('input',event=>renderDefinitions(event.target.value));
-document.getElementById('scale-select').addEventListener('change',()=>{hideTooltip();renderInternal();});
+document.getElementById('scale-select').addEventListener('change',refreshBaseline);
+document.querySelectorAll('.baseline-choice').forEach(button=>button.addEventListener('click',()=>{
+ document.getElementById('scale-select').value=button.dataset.scale;baselineState.selected=button.dataset.baseline;refreshBaseline();
+}));
+baselineElement('kv').addEventListener('change',event=>{baselineState.kvByScale[baselineScale()]=Number(event.target.value);refreshBaseline();});
+baselineElement('context').addEventListener('change',event=>{baselineState.context=Number(event.target.value);renderBaselineLab();});
+baselineElement('seeds').addEventListener('change',event=>{baselineState.seeds=Number(event.target.value);renderBaselineLab();});
+new ResizeObserver(()=>{const s=dims[baselineScale()];drawBaselineHeads('B0',s.h,s.h);drawBaselineHeads('B1',s.h,baselineKV());}).observe(document.querySelector('.baseline-compare'));
 document.querySelectorAll('.mini').forEach(mini=>mini.querySelectorAll('i').forEach((bar,i)=>{bar.classList.add('term');bar.tabIndex=0;bar.setAttribute('role','button');const name=bar.classList.contains('g')?'Gated DeltaNet':'Full attention';bar.dataset.definition=termLookup.get(name.toLocaleLowerCase('id'));bar.setAttribute('aria-label',`Layer ${i+1}: ${name}; tampilkan definisi`);bar.textContent='L'+(i+1);}));
-renderDefinitions();annotate(document.querySelector('.wrap'));renderInternal();
+renderDefinitions();annotate(document.querySelector('.wrap'));renderInternal();renderBaselineLab();
 </script>
 </body>
 </html>
