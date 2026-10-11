@@ -34,7 +34,7 @@ git clone https://github.com/rexxar280903/SLM-INDO.git && cd SLM-INDO
 pip install -q sentencepiece pyarrow huggingface_hub
 python scripts/data/00_eval_sets.py --out /kaggle/working/eval
 python scripts/data/02_audit.py --row-groups 3 --out /kaggle/working/audit.md
-python scripts/data/01_sample_fineweb2.py --eval-dir /kaggle/working/eval --out /kaggle/working/clean --target-gb 14 --workers 4
+python scripts/data/01_sample_fineweb2.py --eval-dir /kaggle/working/eval --out /kaggle/working/clean --target-gb 12 --workers 4
 python scripts/data/03_train_tokenizer.py --clean /kaggle/working/clean --out /kaggle/working/tok16k --vocab 16384
 python scripts/data/04_tokenize.py --clean /kaggle/working/clean --eval-dir /kaggle/working/eval \
     --tok /kaggle/working/tok16k --out /kaggle/working/tokens16k --workers 4

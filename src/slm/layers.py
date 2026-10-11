@@ -97,10 +97,19 @@ def _attention_pallas(q, k, v):
     return tr(out)
 
 
+def _pallas_available() -> bool:
+    """Versi JAX di image Kaggle bisa berbeda; bila kernel Pallas tidak ada, 'auto' memakai XLA."""
+    try:
+        from jax.experimental.pallas.ops.tpu.flash_attention import flash_attention  # noqa: F401
+        return True
+    except Exception:
+        return False
+
+
 def attention_core(q, k, v, cfg: ModelConfig):
     impl = cfg.attn_impl
     if impl == "auto":
-        impl = "pallas" if jax.default_backend() == "tpu" else "xla"
+        impl = "pallas" if jax.default_backend() == "tpu" and _pallas_available() else "xla"
     same_dim = q.shape[-1] == v.shape[-1]
     if impl == "pallas" and cfg.window == 0 and same_dim:
         return _attention_pallas(q, k, v)

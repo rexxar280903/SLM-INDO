@@ -80,10 +80,16 @@ def _process_group(task):
     f, g = task
     for attempt in range(5):                        # jaringan bisa putus: coba ulang
         try:
-            with _W["fs"].open(f, "rb") as fh:
-                rows = pq.ParquetFile(fh).read_row_group(g, columns=COLUMNS).to_pylist()
+            # Satu handle per file per worker: metadata/footer dibaca sekali, lalu hanya
+            # range request ke CDN (menghindari batas laju API Hugging Face anonim).
+            pf = _W.setdefault("pf", {}).get(f)
+            if pf is None:
+                pf = pq.ParquetFile(_W["fs"].open(f, "rb", block_size=8 * 2**20))
+                _W["pf"][f] = pf
+            rows = pf.read_row_group(g, columns=COLUMNS).to_pylist()
             break
         except Exception:
+            _W.get("pf", {}).pop(f, None)
             time.sleep(5 * (attempt + 1))
     else:
         return f, g, [], Counter({"row_group_gagal": 1})
