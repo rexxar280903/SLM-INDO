@@ -1,5 +1,5 @@
 # Data & tokenized corpora (simpan di Kaggle Datasets, bukan di git)
-data/
+/data/
 *.bin
 *.npy
 *.npz
