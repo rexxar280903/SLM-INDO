@@ -37,3 +37,9 @@ desktop.ini
 
 # PDF paper (unduh lokal, jangan di-commit)
 papers/**/*.pdf
+
+# Konfigurasi lokal Claude (preview server)
+.claude/
+
+# Keluaran lokal pipeline data (simpan di Kaggle Datasets)
+slm-data/

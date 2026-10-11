@@ -1,7 +1,7 @@
 # KONSEP PENELITIAN — SLM Efisien untuk Bahasa Indonesia
 
 > **Dokumen hidup.** Ini satu-satunya sumber konsep penelitian. Claude memperbaruinya setiap selesai diskusi.
-> Versi: **v2.2** · Terakhir diperbarui: **2026-10-09** · Fase: **Konsep final, siap mulai minggu 1**
+> Versi: **v3.0** · Terakhir diperbarui: **2026-10-11** · Fase: **Implementasi siap (kode JAX, pipeline data FineWeb-2, unit test). Belum ada hasil eksperimen; berikutnya uji kelayakan TPU lalu pilot B0-S10**
 
 **Penanda status** (dipakai di seluruh dokumen):
 - ✅ **Disepakati**: sudah diputuskan Ken
@@ -16,6 +16,8 @@
 
 ## 0. Ringkasan Singkat
 Membangun **small language model (SLM) bahasa Indonesia** yang efisien, dengan menggabungkan **hybrid linear attention** dan **reduksi KV-cache**, dilatih dari nol dengan **compute gratis** (utama: TPU v5e-8 Kaggle, kode JAX). Prioritasnya adalah efisiensi compute training, lalu memori, lalu parameter. Kontribusi yang dibidik: (1) studi empiris compute-matched pertama untuk setting ini, dan (2) metode usulan *linear-first warm-start* untuk menghemat compute training. Target: preprint arXiv, submit jurnal, dan rilis kode/model sebagai portofolio dalam 2–3 bulan.
+
+**Status 2026-10-11:** data = FineWeb-2 `ind_Latn` (D23). Kode JAX murni + Optax untuk semua varian (B0–B4, grid 17 konfigurasi, N2, MQAR) sudah ditulis dan lulus unit test (§8.1, §10D). Pipeline data sudah diuji end-to-end pada sampel kecil. Belum ada angka hasil training.
 
 ---
 
@@ -114,17 +116,17 @@ Usulan Ken (S10 & S25 di GPU, S125 di TPU) secara teknis **bisa**, tetapi tidak 
 |---|---|---|---|
 | D1 | 2026-10-08 | Fokus: LM baru yang menekankan efisiensi, riset mandiri berbiaya rendah | ✅ |
 | D2 | 2026-10-08 | Urutan prioritas efisiensi: **compute training > memori > parameter** | ✅ |
-| D3 | 2026-10-08 | Bahasa: **Indonesia** (Wikipedia ID, CulturaX/MADLAD; kandidat FineWeb-2 `ind_Latn`) | ✅ |
+| D3 | 2026-10-08 | Bahasa: **Indonesia** (Wikipedia ID, CulturaX/MADLAD; kandidat FineWeb-2 `ind_Latn`) | ✅ diperinci D23 |
 | D4 | 2026-10-08 | Arah arsitektur: **A** (hybrid linear + full attention) + **B** (reduksi KV-cache) | ✅ |
 | D5 | 2026-10-08 | Output: jurnal + arXiv + portofolio, rentang 2–3 bulan | ✅ |
 | D6 | 2026-10-08 | Training utama di GPU gratis; laptop untuk dev & benchmark CPU | ❌ digantikan D10 & D14 |
-| D7 | 2026-10-08 | Kualitas diukur dengan **bits-per-byte** (bukan perplexity mentah) | 🟡 |
+| D7 | 2026-10-08 | Kualitas diukur dengan **bits-per-byte** (bukan perplexity mentah) | ✅ rumus D31 |
 | D8 | 2026-10-08 | Kerangka novelty **N1 + N2** (lihat §7) | ✅ (disetujui 2026-10-09) |
 | D9 | 2026-10-08 | Tangga skala model **10M / 25M / 100M** (opsi 10/25/50 tidak dipilih) | ✅ diperbarui oleh D12 |
 | D10 | 2026-10-09 | **TPU v5e-8 Kaggle sebagai mesin training utama** untuk semua skala; T4×2 sebagai cadangan, benchmark GPU & replikasi kecil | ✅ |
-| D11 | 2026-10-08 | Budget compute dinyatakan dalam **FLOPs** (netral hardware); seluruh run kualitas dalam satu studi dijalankan di hardware yang sama | 🟡 |
+| D11 | 2026-10-08 | Budget compute dinyatakan dalam **FLOPs** (netral hardware); seluruh run kualitas dalam satu studi dijalankan di hardware yang sama | ✅ konvensi D30 |
 | D12 | 2026-10-08 | Tangga skala final **10M / 25M / 50M / kelas 125M**. Skala terbesar = **opsi A**: 768 × 12 (backbone GPT-2 small, ±85M non-embedding, ±97M total dengan vocab 16k). Titik 50M standar | ✅ |
-| D13 | 2026-10-09 | Framework: **JAX** (+ Flax/Optax); Ken belajar sambil jalan | ✅ |
+| D13 | 2026-10-09 | Framework: **JAX** (+ Flax/Optax); Ken belajar sambil jalan | ✅ rincian D24 (tanpa Flax) |
 | D14 | 2026-10-09 | Laptop dipakai untuk menulis kode & **pengujian/benchmark inferensi**, bukan training | ✅ |
 | D15 | 2026-10-09 | Pembagian hardware: semua training di TPU; GPU untuk cadangan + benchmark + replikasi kecil S25 (RQ3) | ✅ (disetujui 2026-10-09) |
 | D16 | 2026-10-09 | Program TPU Research Cloud (TRC) sebagai opsi tambahan compute | 🟡 opsi |
@@ -134,6 +136,21 @@ Usulan Ken (S10 & S25 di GPU, S125 di TPU) secara teknis **bisa**, tetapi tidak 
 | D20 | 2026-10-09 | Vocab: **16k sebagai default** untuk semua skala + ablation vocab kecil (8k/16k/32k) di S25 untuk RQ5 | ✅ |
 | D21 | 2026-10-09 | Jangkar ±350M | ❌ **tidak dipakai** (keputusan Ken). Skala terbesar tetap kelas 125M |
 | D22 | 2026-10-09 | Metrik dibagi **inti** (wajib) dan **pelengkap** (dikerjakan bila waktu cukup), lihat §10A | ✅ |
+| D23 | 2026-10-11 | Data pretraining: **FineWeb-2 `ind_Latn`** (revisi `af9c133…`, dipatok). Sampel = row group acak dari 32 file (seed 20261011), target ±14 GB teks train (±3B token). CulturaX tidak dipakai (cadangan) | ✅ (Ken) |
+| D24 | 2026-10-11 | Implementasi **JAX murni + Optax**: parameter berupa pytree dict, Flax tidak dipakai di inti. Alasan: API stabil lintas versi JAX di Kaggle, transparan untuk belajar, konversi N2 cukup memanipulasi dict | ✅ (delegasi Ken; bisa ditinjau) |
+| D25 | 2026-10-11 | Tokenizer SentencePiece **BPE, vocab 16.384** (2¹⁴, kelipatan 128). Byte fallback, normalisasi identity, tanpa dummy prefix, digit dipisah, `
+` sebagai simbol; unk/bos/eos = 0/1/2. Dilatih dari 1 GB teks train. Ablation 8.192/32.768 | ✅ |
+| D26 | 2026-10-11 | Dimensi: head_dim 64 di semua skala; head Q/GDN = 4/6/8/12; FFN SwiGLU = 8/3·d dibulatkan ke kelipatan 128 → 768/1024/1408/2048 | ✅ |
+| D27 | 2026-10-11 | Varian KV di grid dibandingkan pada **anggaran cache sama = ½ MHA**: GQA (KV head = H/2), MLA (c_KV = d−32 + RoPE 32), CLA (sepasang layer attention berbagi K/V). B1 = GQA H/2 (menggantikan "4 KV head" di S125) | ✅ |
+| D28 | 2026-10-11 | Penempatan attention hybrid: n_attn = ⌊L/(r+1)+0,5⌋, posisi = ⌈j·L/n_attn⌉. Layer terakhir selalu attention; rasio aktual dilaporkan (tabel §8.2) | ✅ |
+| D29 | 2026-10-11 | Konteks training **2048 untuk semua skala** (S10 sebelumnya 1024), agar tren skala tidak tercampur efek konteks | ✅ |
+| D30 | 2026-10-11 | Budget FLOPs per skala = FLOPs/token **B0** × token referensi. Konvensi: 1 MAC = 2 FLOPs, training = 3× forward, attention kausal (T+1)/2 key/query, tanpa biaya remat. Validasi XLA: selisih ±0,5% | ✅ |
+| D31 | 2026-10-11 | bpb = Σ NLL / (ln 2 · Σ byte UTF-8 token target), EOS = 1 byte. Round-trip tokenizer persis menjamin Σ byte token = byte teks | ✅ |
+| D32 | 2026-10-11 | Transfer N2: W_Q/K/V/O GDN → MHA langsung; GQA = mean-pool K/V per kelompok; MLA = W_Q/W_O saja. Momen AdamW tensor yang ditransfer dilanjutkan (ablation: reset; ablation: tanpa transfer) | ✅ |
+| D33 | 2026-10-11 | Urutan data deterministik dari (seed, langkah), identik untuk semua arsitektur. Seed penyaringan = 0, seed konfirmasi = 1, 2, 3 | ✅ |
+| D34 | 2026-10-11 | Hyperparameter awal (§10D): AdamW β=(0,9; 0,95), wd 0,1 (matriks saja), clip 1,0, warmup 3% (≥50 langkah), cosine → 10%, LR puncak 2e-3/1,5e-3/1,2e-3/1e-3, batch 64/128/128/256 × 2048 token. **Nilai LR dikunci setelah sweep pilot** | ✅ prosedur · 🟡 nilai |
+| D35 | 2026-10-11 | Split: val = 1% dokumen (hash teks); **test web = split test resmi FineWeb-2** (36.821 dokumen). Dekontaminasi: benchmark ≥1 n-gram 13 kata (item 8–12 kata dicocokkan utuh); test web bila ≥50% n-gram sama. Filter spam judi dua tingkat (frasa kuat + kepadatan kata) | ✅ |
+| D36 | 2026-10-11 | Presisi: komputasi bf16, master weight fp32, loss & softmax fp32, inti GDN matmul float32 (di TPU default fp32 = pass bf16) | 🟡 biaya diukur di pilot |
 
 ---
 
@@ -204,6 +221,8 @@ Usulan Ken (S10 & S25 di GPU, S125 di TPU) secara teknis **bisa**, tetapi tidak 
 
 **Penjelasan H1.** "Rasio 3:1–6:1" = jumlah layer linear attention untuk setiap 1 layer full attention. Di S125 (12 layer): 3:1 → 9 linear + 3 full; 6:1 → ±10 linear + 2 full. KV-cache hanya ada di layer full attention, jadi 3:1 → KV-cache **4× lebih kecil** (3 dari 12 layer), 6:1 → ±6× lebih kecil. "bpb dalam ±2%" = kualitas prediksi teks hampir setara Transformer penuh (mis. Transformer 1,00 bpb, hybrid ≤1,02 bpb).
 
+**Catatan H4 (2026-10-11, analitik):** di konteks training 2048, satu langkah fase linear hanya 4,8% (S25) sampai 1,7% (S125) lebih murah daripada hybrid 3:1 (§8.3). Dengan τ = 0,5, penghematan dari murahnya langkah saja ≤ ±2,4%. Jadi H4 (10–20%) hanya bisa terpenuhi bila fase linear **mempercepat konvergensi**, bukan karena langkahnya lebih murah. Lihat §13 no. 3. 🔍
+
 **Penjelasan H5.** Yang dibandingkan adalah **ukuran vocab** (jumlah token unik): rencana kita 8k–16k (default 16k) vs tokenizer multilingual umum seperti GPT-2 (±50k), IndoGPT (40k), Llama-2 (32k), Qwen (±151k), Gemma (±256k). Vocab kecil → embedding & lapisan output lebih kecil → compute per token lebih rendah; tokenizer khusus Indonesia → teks dipecah jadi lebih sedikit token. Yang diukur: compute per **byte** teks, bukan per token.
 
 ---
@@ -237,17 +256,75 @@ Jika N2 gagal, N1 tetap layak terbit.
 
 **Varian KV di layer attention:** MHA (acuan), GQA, MLA, CLA (berbagi KV antar layer attention), opsional sliding window.
 
-**Konfigurasi ukuran ✅ (D12: tangga 10M / 25M / 50M / kelas 125M)**
+**Konfigurasi ukuran ✅ (D12, diperinci D25–D30; jumlah parameter dihitung dari kode, 2026-10-11)**
 
-| Nama | d_model × layer | Vocab (tied) | Non-embedding | Total | Porsi embedding | Konteks | Token latih | Waktu TPU/run (🔍) | Peran |
-|---|---|---|---|---|---|---|---|---|---|
-| S10 | 256 × 8 | 16k | ~6M | ~10,5M | ~40% | 1024 | ~0,2B | < 1 mnt + kompilasi | Saring banyak ide dengan murah |
-| S25 | 384 × 10 | 16k | ~18M | ~24M | ~26% | 1024–2048 | ~0,5B | ~2–5 mnt | Grid utama + seed + N2 |
-| S50 | 512 × 14 | 16k | ~44M | ~52M | ~16% | 2048 | ~1B | ~10–20 mnt | Titik tengah tren skala |
-| S125 | 768 × 12 | 16k | ~85M | ~97M | ~13% | 2048 | ~2B | ~40–80 mnt | Kelas 125M: backbone identik GPT-2 small |
+| Nama | d_model × layer | Head Q (×64) | FFN SwiGLU | Vocab | Param B0 total / non-emb | Konteks | Token referensi | Batch (urutan × token) | Langkah B0 | Waktu TPU/run (🔍) | Peran |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| S10 | 256 × 8 | 4 | 768 | 16.384 | 11,01M / 6,82M | 2048 | 0,2B | 64 × 2048 | 1.526 | ~1 mnt + kompilasi | Saring banyak ide dengan murah |
+| S25 | 384 × 10 | 6 | 1024 | 16.384 | 23,99M / 17,70M | 2048 | 0,5B | 128 × 2048 | 1.908 | ~3–6 mnt | Grid utama + seed + N2 + ablation vocab |
+| S50 | 512 × 14 | 8 | 1408 | 16.384 | 53,36M / 44,97M | 2048 | 1B | 128 × 2048 | 3.815 | ~15–27 mnt | Titik tengah tren skala |
+| S125 | 768 × 12 | 12 | 2048 | 16.384 | 97,54M / 84,95M | 2048 | 2B | 256 × 2048 | 3.815 | ~50–90 mnt | Kelas 125M: backbone GPT-2 small |
 
 S125 dilaporkan sebagai "kelas 125M (backbone 85M)"; total parameter lebih kecil dari GPT-2 small (124M) hanya karena vocab 16k vs 50k.
-Debug di laptop memakai versi mini (mis. 192 × 6, ±5M) dengan token sedikit.
+Debug di laptop memakai skala `mini` (192 × 6, konteks 256); unit test memakai `tiny` (128 × 4, konteks 64).
+Waktu TPU dihitung dari budget FLOPs (§10D) dengan asumsi utilisasi 16–30% dari 1.576 TFLOPs. Angka ini harus diganti hasil `scripts/tpu_check.py`. 🔍
+
+### 8.1 Spesifikasi komponen (dibekukan 2026-10-11; implementasi `src/slm/`)
+
+| Komponen | Spesifikasi |
+|---|---|
+| Blok | x → RMSNorm(ε 1e-6) → mixer → +x → RMSNorm → SwiGLU → +x. RMSNorm akhir, embedding di-*tie* dengan LM head, tanpa bias, tanpa dropout |
+| Full attention (MHA/GQA) | Q: H×64, K/V: G×64 (MHA G=H, GQA G=H/2). RoPE θ=10.000 pada 64 dimensi, softmax fp32. TPU: Pallas flash attention, fallback XLA eksplisit |
+| Gated DeltaNet | Proyeksi q, k, v, g: d → H·64. Konvolusi kausal depthwise kernel 4 + SiLU pada q, k, v. L2-norm q, k; q diskalakan 64^−½. β = σ(x·W_b), g = −exp(A_log)·softplus(x·W_a + dt_bias). Gated delta rule chunkwise (chunk 64, triangular solve). RMSNorm per head ⊙ SiLU(x·W_g), lalu proyeksi O. State 64×64 per head (fp32). Parameter mixer = 5d² + 2dH + 12d + 2H + 64 |
+| MLA | Q: d → H·64 (32 tanpa posisi + 32 RoPE). c_KV = RMSNorm(x·W_dkv) berdimensi d−32. K_nope = c_KV·W_uk (H×32), V = c_KV·W_uv (H×64), k_rope bersama = RoPE(x·W_kr) (32). Cache per token per layer = d nilai (½ MHA) |
+| CLA | Layer attention dipasangkan berurutan: layer pertama menghasilkan K/V, layer kedua hanya punya W_Q/W_O dan memakai K/V tersebut. Jumlah layer attention ganjil → satu layer tanpa pasangan |
+| Sliding window (B4) | Jendela 512 token pada layer attention hybrid 3:1 |
+| Inisialisasi | N(0; 0,02). W_O dan W_down: N(0; 0,02/√(2L)). A_log = log U(1, 16); dt ~ log-U(1e-3, 1e-1), dt_bias = softplus⁻¹(dt); conv U(±0,5); norm = 1 |
+| Kebenaran | `tests/test_gdn.py`: chunkwise = rekuren (output, state, gradien; 2 solver). `tests/test_model.py`: kausalitas semua varian, jumlah parameter = rumus untuk 22 arsitektur × 4 skala, cache GQA/MLA/CLA = ½ MHA |
+
+### 8.2 Penempatan layer dan pembanding per skala (analitik)
+
+Posisi layer full attention (1-indexed; aturan D28) dan rasio aktual linear:attention:
+
+| Rasio nominal | S10 (8 layer) | S25 (10) | S50 (14) | S125 (12) |
+|---|---|---|---|---|
+| 1:1 | 2,4,6,8 (4:4) | 2,4,6,8,10 (5:5) | 2,4,…,14 (7:7) | 2,4,…,12 (6:6) |
+| 3:1 | 4,8 (6:2) | 4,7,10 (7:3 = 2,33:1) | 4,7,11,14 (10:4 = 2,5:1) | 4,8,12 (9:3) |
+| 6:1 | 8 (7:1) | 10 (9:1) | 7,14 (12:2) | 6,12 (10:2 = 5:1) |
+
+Kolom: param total (M) · FLOPs latih/token relatif B0 · KV byte/token (bf16) · langkah compute-matched. Tabel lengkap 22 arsitektur ada di `notes/arch_report.json` (`python scripts/arch_report.py`).
+
+| Model | S10 | S25 | S50 | S125 |
+|---|---|---|---|---|
+| B0 MHA | 11,01 · 1,000 · 8.192 · 1.526 | 23,99 · 1,000 · 15.360 · 1.908 | 53,36 · 1,000 · 28.672 · 3.815 | 97,54 · 1,000 · 36.864 · 3.815 |
+| B1 GQA (H/2) | 10,49 · 0,966 · 4.096 · 1.580 | 22,52 · 0,954 · 7.680 · 2.000 | 49,69 · 0,946 · 14.336 · 4.032 | 90,46 · 0,939 · 18.432 · 4.061 |
+| B2 GDN murni | 11,58 · 0,822 · 0 · 1.857 | 25,56 · 0,856 · 0 · 2.228 | 57,23 · 0,888 · 0 · 4.295 | 104,95 · 0,937 · 0 · 4.071 |
+| B3 hybrid 3:1 MHA | 11,44 · 0,866 · 2.048 · 1.761 | 25,09 · 0,899 · 4.608 · 2.121 | 56,13 · 0,920 · 8.192 · 4.146 | 103,09 · 0,953 · 9.216 · 4.004 |
+| B4 hybrid 3:1 SWA-512 | 11,44 · 0,827 · 2.048* · 1.844 | 25,09 · 0,858 · 4.608* · 2.224 | 56,13 · 0,885 · 8.192* · 4.308 | 103,09 · 0,930 · 9.216* · 4.102 |
+
+\* B4: cache berhenti tumbuh setelah 512 token. State GDN S125 (fp32): B2 2,36 MB, B3 1,77 MB; buffer conv ±0,1–0,2 MB.
+
+### 8.3 Temuan analitik: keunggulan compute hybrid kecil di konteks 2k 🔍
+
+FLOPs latih per token relatif B0 pada beberapa panjang konteks (dari `slm.flops`, bukan pengukuran):
+
+| Skala | B2 · 2k | B3 · 2k | B2 · 4k | B3 · 4k | B2 · 8k | B3 · 8k |
+|---|---|---|---|---|---|---|
+| S10 | 0,822 | 0,866 | 0,644 | 0,733 | 0,450 | 0,587 |
+| S25 | 0,856 | 0,899 | 0,687 | 0,781 | 0,492 | 0,644 |
+| S50 | 0,888 | 0,920 | 0,731 | 0,808 | 0,539 | 0,671 |
+| S125 | 0,937 | 0,953 | 0,806 | 0,855 | 0,630 | 0,723 |
+
+Implikasi:
+1. Di konteks 2k, hybrid 3:1 hanya 5–13% lebih murah per token, padahal KV-cache-nya 4× lebih kecil. Klaim efisiensi terkuat diperkirakan ada pada **memori dan inferensi**, sedangkan compute training menjadi sekunder (tetap diuji, RQ1).
+2. Mixer GDN (5d²) lebih besar dari attention (4d²), sehingga model linear/hybrid punya parameter ±5–8% lebih banyak pada width/depth yang sama. Compute-matched menyerap selisih ini; jumlah aktual dilaporkan.
+3. N2 di konteks 2k: fase linear hanya 1,7–4,8% lebih murah per langkah (lihat catatan H4 di §6). Bila N2 ingin dinilai sebagai penghemat compute, variannya di konteks 8k menjadi relevan (fase linear 24% lebih murah per langkah di S25). Keputusan ini masuk §13.
+
+### 8.4 Varian grid yang tidak informatif
+
+- `h6-cla` di S10/S25 identik dengan `h6-mha` (hanya satu layer attention, tidak ada pasangan) → tidak dijalankan; grid di dua skala itu = 16 run unik.
+- CLA dengan jumlah layer attention ganjil (h3 di S25/S125, h1 di S25) menghasilkan cache ⅔ atau ⅗, bukan ½. Angka aktual dilaporkan, dan perbandingan iso-cache memakai varian lain.
+- MLA pada anggaran ½ MHA hanya kompresi ringan (S125: laten 736 → 12 head). Kompresi agresif (¼) dicatat sebagai ablation opsional, bukan grid utama.
 
 **Opsi skala terbesar: 100M vs 125M** ✅ opsi A dipilih (Diskusi #10–11)
 
@@ -314,18 +391,33 @@ Catatan umum: klaim arsitektur butuh ≥2–3 skala; 20 token/parameter hanya pa
 
 ---
 
-## 9. Dataset & Tokenizer
+## 9. Dataset & Tokenizer ✅ (D23, D25, D35)
 
 | Peran | Dataset | Status |
 |---|---|---|
-| **Data latih utama** (*pretraining* = proses melatih model **dari nol**, bukan memakai model jadi) | FineWeb-2 `ind_Latn` atau CulturaX `id` (subset 0,5–2B token) | 🟡 pilih setelah cek kualitas |
-| Evaluasi held-out | Wikipedia ID (dipisah dari data latih, cek duplikasi) | 🟡 |
-| Recall sintetis | MQAR (dibangkitkan sendiri) | 🟡 |
-| Downstream ringan | Satu tugas IndoNLU (mis. SmSA sentimen) via fine-tune singkat | 🟡 |
-| Referensi eksternal | Goldfish `ind_latn` (≤125M; bandingkan via bpb) | 🟡 |
-| Evaluasi pembanding | FLORES-200 `ind_Latn` (dipakai Goldfish → perbandingan langsung) | 🟡 |
+| **Data latih utama** (*pretraining* = melatih model **dari nol**, bukan memakai model jadi) | **FineWeb-2 `ind_Latn`** revisi `af9c13333eb981300149d5ca60a8e9d659b276b9`: 32 file train (152 GB parquet, ±100 juta dokumen). Sampel = row group acak (1.000 dokumen/row group) dari semua file, seed 20261011, sampai ±14 GB teks train (±3B token) | ✅ D23 |
+| Validasi (pemilihan konfigurasi, kurva) | 1% dokumen sampel (dipilih dari hash teks) | ✅ D35 |
+| **Test web held-out** | Split **test resmi FineWeb-2 `ind_Latn`** (36.821 dokumen, ±29,8M token). Duplikat exact dan near-duplicate (≥50% n-gram) dibuang dari train | ✅ D35 |
+| Evaluasi pembanding | FLORES-200 `ind_Latn` dev (997 kalimat, pengembangan) dan devtest (1.012 kalimat, final) | ✅ diunduh & diuji |
+| bpb pelengkap | 1.000 artikel Wikipedia Indonesia (`wikimedia/wikipedia` 20231101.id, ≥500 karakter) | ✅ |
+| Downstream ringan | IndoNLU SmSA (train 11.000 / valid 1.260 / test 500, berlabel) | ✅ diunduh |
+| Recall sintetis | MQAR (dibangkitkan sendiri, `src/slm/mqar.py`) | ✅ |
+| Referensi eksternal | Goldfish `ind_latn`, IndoGPT, GPT-2 Indonesia (dievaluasi di fase evaluasi) | 🟡 |
+| CulturaX `id` | Tidak dipakai; cadangan bila FineWeb-2 bermasalah | ❌ (D23) |
 
-**Tokenizer:** SentencePiece (BPE/Unigram + byte-fallback), dilatih sendiri dari nol di sesi CPU Kaggle/TPU-VM (bukan laptop, sesuai D14) dari ~1 GB teks Indonesia. Vocab: **16k default** (D20); ablation 8k / 16k / 32k hanya di S25 (±9 run × 3–5 mnt TPU). 🟡
+**Pipeline** (`scripts/data/`, dijalankan di CPU Kaggle):
+1. `00_eval_sets.py`: unduh FLORES, SmSA, Wikipedia uji, dan test FineWeb-2, lalu bangun dua indeks dekontaminasi. Indeks benchmark berisi 641 ribu n-gram 13 kata dan ±1.900 item pendek; indeks test web berisi 19,1 juta n-gram.
+2. `01_sample_fineweb2.py`: untuk setiap row group, filter kualitas → dedup exact → dekontaminasi → split hash, lalu tulis shard parquet zstd. Diproses paralel dengan urutan deterministik.
+3. `02_audit.py`: laporan sampel dengan contoh dokumen yang dibuang/lolos ([`notes/audit-fineweb2.md`](notes/audit-fineweb2.md)).
+4. `03_train_tokenizer.py` → `04_tokenize.py`: menghasilkan `train.bin`, `val.bin`, `test.bin` (uint16) + `token_bytes.npy` + `meta.json` (sha256).
+
+**Filter tambahan di atas pipeline FineWeb-2** (FineWeb-2 sudah melakukan GlotLID, filter kualitas, dan dedup MinHash global):
+- Dokumen < 20 kata dibuang.
+- **Spam judi online**, dua tingkat. Tingkat 1: ≥3 frasa kuat, atau densitas frasa ≥1% karakter; contoh frasa "slot gacor", "maxwin", "togel online" (46 frasa). Tingkat 2: ≥4 kata judi dan ≥1% kata, misalnya judi, taruhan, kasino, togel, slot. "bandar", "spin", dan "wd" dikeluarkan karena ambigu ("Bandar Lampung", "bandar udara").
+- **Hasil audit** (sampel kecil, bukan statistik korpus): 3.000 dokumen dump 2023 → 15,3% dibuang sebagai spam judi; 3.000 dokumen dump 2017–2022 → 9,5%. Contoh yang terbuang hampir semuanya halaman judi. Sebagian kecil adalah berita bertopik kasino/taruhan, dan kehilangan ini diterima. 🟡 Ambang dapat diperketat setelah audit di Kaggle.
+- **Dekontaminasi**: dokumen dibuang bila memuat ≥1 n-gram 13 kata dari FLORES, SmSA, atau Wikipedia uji (item 8–12 kata dicocokkan utuh), atau bila ≥50% n-gram-nya ada di test web. Diagnosis: kriteria "≥1 n-gram" terhadap test web membuang 13,7% dokumen karena template situs yang sama (median overlap 6,8%), sehingga diganti kriteria near-duplicate. Hasil kriteria baru: 0,1%.
+
+**Tokenizer (D25):** SentencePiece BPE 16.384, byte fallback, normalisasi identity, `add_dummy_prefix=False`, `split_digits=True`, `\n` sebagai simbol, unk/bos/eos = 0/1/2. Dilatih dari 1 GB baris teks train (bukan laptop, sesuai D14). Uji pada sampel 24 MB menghasilkan round-trip persis 73/73 dokumen dan Σ byte token = byte teks. Angka sementara 4,38 byte/token dan fertility 1,61 token/kata berasal dari sampel kecil; nilai final menunggu tokenizer 1 GB 🔍. Ablation 8.192/32.768 dilatih dari teks yang sama (`slm-indo-clean`).
 
 ---
 
@@ -336,11 +428,12 @@ Catatan umum: klaim arsitektur butuh ≥2–3 skala; 20 token/parameter hanya pa
 **Grid utama (S10 lalu S25):**
 - Rasio: Transformer penuh, 1:1, 3:1, 6:1, pure linear
 - KV (untuk model yang punya layer attention): MHA, GQA, MLA, CLA
-- Total ±17 konfigurasi × 1 seed; 5 terbaik diulang 3 seed
+- Total ±17 konfigurasi × 1 seed (16 run unik di S10/S25, §8.4); 5 terbaik diulang 3 seed (seed 1–3)
+- Nama konfigurasi di kode: `full|h1|h3|h6`-`mha|gqa|mla|cla`, `linear`; alias `b0`–`b4` (§8.2)
 
 **Skala S50 & S125:** baseline Transformer (dijalankan awal) + 2–3 konfigurasi terbaik yang konsisten di S10 & S25; 3 seed bila memakai TPU.
 
-**Eksperimen N2:** titik peralihan linear→attention di {10%, 25%, 50%} total langkah vs hybrid dari nol.
+**Eksperimen N2:** titik peralihan linear→attention di {10%, 25%, 50%} langkah referensi vs hybrid dari nol (`--n2-tau`). Ablation: transfer vs inisialisasi acak (`--n2-no-transfer`), momen dilanjutkan vs reset (`--n2-reset-moments`). Lihat §8.3 tentang kecilnya selisih biaya per langkah di konteks 2k.
 
 **Metrik & pembanding:** lihat §10A dan §10B.
 
@@ -441,16 +534,16 @@ Ya, bagian hasil membandingkan model kita dengan model lain dalam **tiga kelompo
 
 | Kode | Model | Kelompok | Arsitektur | Param total | Non-embedding | Vocab | Konteks maks | Data latih | KV-cache / 1.000 token (fp16)* |
 |---|---|---|---|---|---|---|---|---|---|
-| **OURS** | Hybrid terbaik kita (target: Gated DeltaNet 3:1 + GQA) | – | Hybrid A+B | ~97M | ~85M | 16k | 2048 (uji s.d. 8k) | ~2B token (±8–10 GB) | **~3,1 MB** + state tetap ~0,9 MB 🎯 |
-| B0 | Transformer gaya LLaMA (MHA) | G1 | Full attention | ~97M | ~85M | 16k | 2048 | sama dengan OURS | ~36,9 MB |
-| B1 | Transformer + GQA (4 KV head) | G1 | Full attention + B | ~95M | ~83M | 16k | 2048 | sama | ~12,3 MB |
-| B2 | Pure Gated DeltaNet | G1 | Linear penuh | ~97M | ~85M | 16k | 2048 | sama | 0 MB + state tetap ~1,2 MB |
-| B3 | Hybrid 3:1 (gaya Qwen3-Next, MHA) | G1 | Hybrid A | ~97M | ~85M | 16k | 2048 | sama | ~9,2 MB + state tetap ~0,9 MB |
+| **OURS** | Hybrid terbaik kita (target: Gated DeltaNet 3:1 + GQA H/2) | – | Hybrid A+B | ~101M | ~89M | 16.384 | 2048 (uji s.d. 8k) | ~2,1B token (compute-matched) | **~4,6 MB** + state tetap ~1,8 MB (fp32) 🎯 |
+| B0 | Transformer gaya LLaMA (MHA) | G1 | Full attention | 97,5M | 85,0M | 16.384 | 2048 | 2,0B token (anchor budget) | ~36,9 MB |
+| B1 | Transformer + GQA (6 KV head = H/2, D27) | G1 | Full attention + B | 90,5M | 77,9M | 16.384 | 2048 | budget FLOPs sama | ~18,4 MB |
+| B2 | Pure Gated DeltaNet | G1 | Linear penuh | 105,0M | 92,4M | 16.384 | 2048 | budget FLOPs sama | 0 MB + state tetap ~2,4 MB (fp32) |
+| B3 | Hybrid 3:1 (gaya Qwen3-Next, MHA) | G1 | Hybrid A | 103,1M | 90,5M | 16.384 | 2048 | budget FLOPs sama | ~9,2 MB + state tetap ~1,8 MB (fp32) |
 | E1 | **IndoGPT** (IndoNLG, 2021) | G2 | GPT-2 (768×12) | ~117M | ~85M | 40k | 1024 | Indo4B-Plus ±23,8 GB | ~36,9 MB |
 | E2 | **cahya/gpt2-small-indonesian-522M** | G2 | GPT-2 small | ~124M | ~85M | 52k | 1024 🔍 | Wikipedia ID 522 MB | ~36,9 MB |
 | E3 | **Goldfish `ind_latn` 1000mb** | G2 | GPT-2-style 🔍 | ~125M | 🔍 | 🔍 | 🔍 | ≤1 GB | ~36,9 MB 🔍 |
 
-\* KV-cache dihitung analitik: 2 (K,V) × layer attention × 768 × 2 byte × 1.000 token. Konfigurasi 768×12: MHA = 12 layer attention; hybrid 3:1 = 3 layer; GQA 4/12 head = ⅓. "State tetap" = memori rekuren Gated DeltaNet yang **tidak** tumbuh dengan panjang teks. Baris OURS adalah **target/hipotesis**, bukan hasil. 🔍 = perlu dicek di model card/paper.
+\* KV-cache dihitung analitik: 2 (K,V) × layer attention × head KV × 64 × 2 byte × 1.000 token. Konfigurasi 768×12: MHA = 12 layer attention; hybrid 3:1 = 3 layer; GQA 6/12 head = ½ (D27, diperbarui 2026-10-11 dari 4/12). Parameter internal dihitung dari kode (§8.2). "State tetap" = memori rekuren Gated DeltaNet yang **tidak** tumbuh dengan panjang teks. Baris OURS adalah **target/hipotesis**, bukan hasil. 🔍 = perlu dicek di model card/paper.
 
 ### Metrik pembanding per kelompok
 
@@ -498,17 +591,17 @@ xychart-beta
     title "KV-cache per 1.000 token (MB)"
     x-axis ["B0 MHA", "E1 IndoGPT", "E2 GPT2-Indo", "B1 GQA", "B3 Hybrid 3:1", "OURS (target)", "B2 Pure GDN"]
     y-axis "MB" 0 --> 40
-    bar [36.9, 36.9, 36.9, 12.3, 9.2, 3.1, 0]
+    bar [36.9, 36.9, 36.9, 18.4, 9.2, 4.6, 0]
 ```
 
-**Parameter total (juta)**. Selisih model kita vs pembanding hampir seluruhnya berasal dari vocab yang lebih kecil; non-embedding semuanya ±85M.
+**Parameter total (juta)**. Selisih B0 vs pembanding hampir seluruhnya berasal dari vocab yang lebih kecil (non-embedding B0 = 85,0M). Varian hybrid sedikit lebih besar karena mixer GDN 5d² (§8.3).
 
 ```mermaid
 xychart-beta
     title "Parameter total (juta)"
-    x-axis ["OURS / B0 (vocab 16k)", "E1 IndoGPT (40k)", "E2 GPT2-Indo (52k)", "E3 Goldfish"]
+    x-axis ["B0 (vocab 16.384)", "OURS target (h3-gqa)", "E1 IndoGPT (40k)", "E2 GPT2-Indo (50k)", "E3 Goldfish"]
     y-axis "Juta parameter" 0 --> 140
-    bar [97, 117, 124, 125]
+    bar [97.5, 101.3, 117, 124, 125]
 ```
 
 **Ukuran data latih (GB teks)**. Menunjukkan mengapa G2 bukan perbandingan compute-matched.
@@ -554,6 +647,25 @@ xychart-beta
 
 ---
 
+## 10D. Hyperparameter & Protokol Training (D30, D33, D34) ✅ prosedur · 🟡 nilai LR
+
+| Skala | Batch (urutan × token) | Token/langkah | Micro-batch × akumulasi | Budget FLOPs (B0 × token ref.) | Langkah B0 | Warmup | LR puncak awal |
+|---|---|---|---|---|---|---|---|
+| S10 | 64 × 2048 | 131.072 | 64 × 1 (8/chip) | 1,825 × 10¹⁶ | 1.526 | 50 langkah | 2,0e-3 |
+| S25 | 128 × 2048 | 262.144 | 128 × 1 (16/chip) | 9,560 × 10¹⁶ | 1.908 | 3% | 1,5e-3 |
+| S50 | 128 × 2048 | 262.144 | 128 × 1 | 4,082 × 10¹⁷ | 3.815 | 3% | 1,2e-3 |
+| S125 | 256 × 2048 | 524.288 | 128 × 2 | 1,397 × 10¹⁸ | 3.815 | 3% | 1,0e-3 |
+
+Sama untuk semua skala dan arsitektur:
+- **Optimizer:** AdamW (β1 0,9, β2 0,95, ε 1e-8). Weight decay 0,1 hanya pada matriks proyeksi; embedding, norm, conv, A_log, dan dt_bias tanpa decay. Gradient clipping norm global 1,0. Tanpa dropout, z-loss 0.
+- **Jadwal LR:** fungsi dari progres FLOPs p ∈ [0, 1]. Warmup linear sampai max(3%, 50 langkah), lalu cosine turun ke 10% puncak. Karena memakai p, jadwal tetap benar untuk N2 walaupun biaya per langkah berubah setelah konversi.
+- **Compute-matched (utama):** langkah = ⌊budget / FLOPs-per-langkah arsitektur⌋, sehingga arsitektur yang lebih murah melihat lebih banyak token. **Token-matched (kontrol):** langkah = langkah referensi B0 (opsi `--budget-mode tokens`).
+- **Evaluasi:** bpb validasi (±4,2M token) di 10%, 20%, …, 100% budget, yaitu grid compute yang sama untuk semua arsitektur. Test (FLORES devtest, test web) hanya di akhir (`slm.evaluate`).
+- **Checkpoint:** setiap 30 menit, saat konversi N2, dan di akhir. Isinya bobot, momen AdamW, langkah, FLOPs kumulatif, dan jenis layer. Resume diuji (`tests/test_training.py`).
+- **Divergensi:** run dihentikan bila loss tidak hingga. Lonjakan loss dicatat di `metrics.jsonl`.
+- **Sweep LR (pilot, sebelum grid):** {0,5; 1; 2} × LR awal untuk B0 dan B2 di S10 dan S25 (12 run singkat). LR tunggal per skala dipilih dari rerata bpb validasi relatif. Bila optimum B0 dan B2 berbeda ≥2×, dipakai LR per keluarga mixer dengan biaya tuning yang sama, dan hal ini dilaporkan. S50/S125 memakai ekstrapolasi log-linear dari S10/S25 dan diperiksa dengan 2 titik di S50.
+- **MQAR:** probe berbentuk S10 (d 256 × 8 layer, vocab 8.192, konteks 1.024). Campuran panjang 128–1.024 dan 8–128 pasangan, 6.000 langkah × 128 urutan. LR dipilih terbaik dari {1e-4, 3e-4, 1e-3, 3e-3} per arsitektur (protokol Zoology). Set uji MQAR identik untuk semua arsitektur (seed 12345).
+
 ## 11. Risiko & Mitigasi
 
 | Risiko | Dampak | Mitigasi |
@@ -570,6 +682,11 @@ xychart-beta
 | Kurva belajar JAX untuk Ken | Minggu 1–2 lebih lambat | Mulai dari contoh minimal; Claude menyiapkan kerangka kode & penjelasan per bagian |
 | Model kecil terlalu lemah untuk benchmark downstream | Hasil tidak bermakna | Andalkan bpb + MQAR; downstream hanya pelengkap |
 | Laptop throttling saat benchmark CPU | Angka latensi bias | Ulangi pengukuran, catat suhu/daya, pakai median |
+| Keunggulan FLOPs hybrid kecil di konteks 2k (5–13%, §8.3) | Klaim compute training (RQ1) dan H4 melemah | Klaim utama digeser ke frontier memori/inferensi. N2 diuji juga di konteks 8k bila Ken setuju (§13 no. 3) |
+| Matmul fp32 di TPU default = pass bf16 | Galat state GDN terakumulasi | Inti GDN dipaksa float32 (D36). `tpu_check.py` mengukur galat dan biaya kedua opsi |
+| API Pallas flash attention berubah / tidak tersedia di image Kaggle | Memori attention T×T besar | Fallback XLA eksplisit + remat per blok + micro-batch lebih kecil. Opsi `--set attn_impl=xla` |
+| Spam judi lolos filter / berita sah ikut terbuang | Distribusi data bias | Audit sampel (notes/audit-fineweb2.md), ambang 🟡 dibekukan sebelum tokenisasi. Statistik pembuangan dilaporkan |
+| Pelatihan tokenizer 1 GB kehabisan RAM di Kaggle | Pipeline tertunda | `--sample-gb 0,5`. Uji round-trip & byte tetap wajib lolos |
 
 ---
 
@@ -583,14 +700,26 @@ xychart-beta
 | 8–9 | S50 & S125 untuk 2–3 konfigurasi terbaik; ablation; seed tambahan; benchmark CPU | Hasil final |
 | 10–12 | Penulisan paper, rilis kode/model, arXiv, submit jurnal | Preprint + submission |
 
+**Status 2026-10-11 (minggu 1):** kode JAX lengkap + unit test, pipeline data diuji end-to-end pada sampel 8 row group, dan uji training mini (B3) pada token FineWeb-2 asli sudah dilakukan. Belum: data penuh di Kaggle, uji kelayakan TPU, pembacaan W1.
+
 Catatan: dalam 3 bulan target realistis adalah preprint + submit jurnal, karena review jurnal biasanya berbulan-bulan. arXiv kemungkinan perlu *endorsement* untuk pengunggah pertama. 🔍
 
 ---
 
 ## 13. Pertanyaan Terbuka ❓
-Semua pertanyaan konsep sudah terjawab (2026-10-09). Sisa tugas verifikasi:
+Sisa tugas verifikasi:
 1. Cek indeks & scope calon jurnal Scopus/SINTA (minggu 9–10).
 2. Baca paper W1 (Training-time Selection) untuk memastikan novelty N2 (minggu 1).
+
+Perlu keputusan Ken (diajukan 2026-10-11):
+
+3. **N2 di konteks 8k?** Analisis §8.3 menunjukkan bahwa di konteks 2k fase linear hanya 1,7–4,8% lebih murah per langkah, sehingga H4 (hemat 10–20%) bergantung pada percepatan konvergensi. Opsi:
+   - (a) pertahankan desain (N2 di 2k) dan nyatakan mekanisme yang diuji = konvergensi;
+   - (b) tambahkan N2 di S25 konteks 8k (fase linear 24% lebih murah per langkah) sebagai eksperimen kedua. Biayanya ±2–3 TPU-jam.
+
+   Rekomendasi: **(b)**, karena memisahkan efek "langkah lebih murah" dari efek "konvergensi".
+4. **D24 tanpa Flax:** setuju kode inti memakai JAX murni + Optax? Flax tetap bisa dipakai untuk eksperimen sampingan.
+5. **Ambang filter judi:** cukup dengan audit 6.000 dokumen, atau audit diperluas di Kaggle sebelum tokenisasi penuh?
 
 ---
 
@@ -623,6 +752,22 @@ Format: tanggal — topik — hasil — keputusan — langkah berikutnya
 - **2026-10-09 · Diskusi #17**: Ken menyetujui D15 (semua training di TPU) dan target jurnal Scopus & SINTA (D19). Rekomendasi: vocab 16k + ablation di S25 (D20), 350M sebagai stretch goal bersyarat (D21), metrik inti vs pelengkap + cek kontaminasi (D22).
 - **2026-10-09 · Diskusi #18**: Ken menolak jangkar 350M (D21 ❌) dan menyetujui sisanya: vocab 16k + ablation di S25 (D20 ✅), metrik inti vs pelengkap (D22 ✅), metrik/pembanding §10A–§10C (D17, D18 ✅). **Konsep dinyatakan final (v2.0)**. Berikutnya: minggu 1.
 - **2026-10-09 · Diskusi #19**: Ditambahkan penjelasan tiap metrik (fungsi, satuan, arah lebih baik, contoh) di §10C.
+- **2026-10-11 · Diskusi #21 (implementasi)**: Ken memilih **FineWeb-2** (D23) dan meminta semua persiapan diselesaikan sebelum training.
+  - **Dibuat:** kode `src/slm/` (JAX murni + Optax): B0–B4, grid 17 konfigurasi, MLA/CLA/SWA, Gated DeltaNet chunkwise, N2, MQAR, checkpoint/resume, dan evaluasi bpb. Juga pipeline `scripts/data/`, `tpu_check.py`, `arch_report.py`, dan 124 unit test.
+  - **Keputusan D24–D36:** vocab 16.384, KV iso-cache ½, konteks 2048 semua skala, budget berbasis B0, dan hyperparameter awal.
+  - **Diganti** (isi lama dipindahkan ke sini):
+    - S10 konteks 1024 → 2048 (D29);
+    - B1 "4 KV head" di S125 → H/2 = 6 (D27);
+    - vocab "16k/16.000" → 16.384 (D25);
+    - FFN S10 704 → 768 (D26);
+    - target cache OURS 3,1 MB → 4,6 MB;
+    - parameter B0 S10/S25/S50/S125 dari estimasi 10,5/24/52/97M → hitungan kode 11,0/24,0/53,4/97,5M.
+  - **Temuan analitik:** keunggulan FLOPs hybrid di 2k hanya 5–13% (§8.3), sehingga H4 perlu ditinjau (§13 no. 3).
+  - **Validasi:**
+    - chunkwise GDN = rekuren (output, state, gradien);
+    - FLOPs analitik = XLA ±0,5% untuk attention; GDN berselisih 3–4%, sesuai suku triangular solve yang tidak dihitung XLA;
+    - training mini B3 200 langkah pada token FineWeb-2 asli: loss 9,75 → 7,10, val bpb 2,34 (validasi pipeline, bukan hasil).
+  - **Audit data:** spam judi 9,5–15,3% dokumen, dan dekontaminasi direvisi menjadi near-duplicate untuk test web.
 - **2026-10-09 · Diskusi #20**: Dibuat visualisasi `visual/peta-alur-arsitektur.html`: peta alur 10 fase (data → tokenizer → implementasi → uji TPU → baseline → grid & N2 → naik skala → evaluasi → rilis) dengan 3 titik keputusan, isi satu run training, diagram arsitektur hybrid 3:1 + GQA (S125), skema N2, tangga skala.
 
 ---
